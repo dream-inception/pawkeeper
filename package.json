@@ -1,0 +1,53 @@
+{
+  "name": "break-neko-macos",
+  "version": "1.1.6",
+  "description": "A macOS desktop break reminder that brings a cat to guard your screen.",
+  "main": "src/main/index.js",
+  "scripts": {
+    "dev": "electron .",
+    "start": "npm run dev",
+    "check": "node --check src/main/index.js && node --check src/main/automation-tests.js && node --check src/main/break-window.js && node --check src/main/custom-cat.js && node --check src/main/paths.js && node --check src/main/settings.js && node --check src/main/stats.js && node --check src/main/ipc.js && node --check src/main/menu.js && node --check src/main/pet-window.js && node --check src/main/reminders.js && node --check src/main/timer-service.js && node --check src/preload.js && node --check src/shared.js && node --check src/renderer/app.js && node --check src/break/break.js && node --check src/pet/pet.js",
+    "lint": "npm run check",
+    "test": "node --test test/*.test.js",
+    "test:visual": "BREAK_NEKO_VISUAL_TEST=1 electron .",
+    "build:mac": "electron-builder --mac"
+  },
+  "keywords": [
+    "electron",
+    "macos",
+    "break-reminder",
+    "cat"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "author": "dream-inception",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "electron-store": "^11.0.2"
+  },
+  "build": {
+    "appId": "dev.dream-inception.break-neko",
+    "productName": "Break Neko",
+    "files": [
+      "assets/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "assets/*.webm"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/break-neko.icns"
+    }
+  }
+}

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' file: data:; media-src 'self' file:;"
+  >
+  <title>Break Neko</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <aside class="sidebar">
+      <header class="hero">
+        <div class="hero-glow"></div>
+        <img src="../../assets/break-neko-icon128.png" alt="Break Neko app icon" class="app-icon">
+        <div class="hero-copy">
+          <span class="eyebrow">Cat-powered reminders</span>
+          <h1>Break Neko</h1>
+          <span id="appVersion" class="app-version" aria-live="polite">Version --</span>
+          <p>Stand, drink, focus, and let the cat interrupt you gently.</p>
+        </div>
+      </header>
+
+      <section class="onboarding-card" id="onboardingPanel" hidden>
+        <div>
+          <span class="eyebrow">Suggested start</span>
+          <strong>Stand + water reminders with a transparent cat overlay.</strong>
+        </div>
+        <button type="button" id="completeOnboardingBtn">Use defaults</button>
+      </section>
+
+      <section class="status-card">
+        <div class="status-copy">
+          <span class="eyebrow">Today</span>
+          <strong id="timerStatus">Loading...</strong>
+          <p id="nextReminderText">Next reminder: --</p>
+          <p id="timerQueueText" class="queue-text"></p>
+          <div id="statusReminderChips" class="reminder-chip-row" aria-live="polite"></div>
+          <p id="todayStatsText">Today: --</p>
+        </div>
+        <div class="status-orb" id="statusOrb">
+          <span class="status-type-icon" id="statusTypeIcon" aria-hidden="true"></span>
+          <div class="status-time" id="timerTime">--:--</div>
+        </div>
+      </section>
+
+    </aside>
+
+    <form id="settingsForm" class="settings-card workspace">
+      <div class="card-heading">
+        <div>
+          <span class="eyebrow">Control center</span>
+          <h2>Reminder setup</h2>
+        </div>
+        <div id="enabledReminderSummary" class="enabled-reminder-summary" aria-live="polite"></div>
+      </div>
+
+      <div class="primary-actions">
+        <button type="button" id="timerToggleBtn" class="secondary">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path class="timer-icon-play" d="M8 5v14l11-7Z"></path>
+            <path class="timer-icon-pause" d="M8 5h3v14H8Zm5 0h3v14h-3Z"></path>
+          </svg>
+          <span id="timerToggleLabel">Start Reminders</span>
+        </button>
+        <button type="button" id="breakNowBtn">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M5 8 3.5 4.5 8 6l2-2h4l2 2 4.5-1.5L19 8v5a7 7 0 0 1-14 0V8Z"></path>
+            <path d="M9 13h.01M15 13h.01M10 16c1.2.7 2.8.7 4 0"></path>
+          </svg>
+          <span>Summon Cat</span>
+        </button>
+      </div>
+
+      <nav class="panel-tabs" aria-label="Reminder settings" role="tablist">
+        <button type="button" class="tab-button is-active" id="timersTab" data-panel-target="timersPanel" role="tab" aria-selected="true" aria-controls="timersPanel">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="8"></circle>
+            <path d="M12 7v5l3 2"></path>
+          </svg>
+          <span>Timers</span>
+        </button>
+        <button type="button" class="tab-button" id="tasksTab" data-panel-target="tasksPanel" role="tab" aria-selected="false" aria-controls="tasksPanel" tabindex="-1">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M8 12l2.4 2.4L16 8.8"></path>
+            <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path>
+          </svg>
+          <span>Tasks</span>
+        </button>
+        <button type="button" class="tab-button" id="catTab" data-panel-target="catPanel" role="tab" aria-selected="false" aria-controls="catPanel" tabindex="-1">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M5 8 3.5 4.5 8 6l2-2h4l2 2 4.5-1.5L19 8v5a7 7 0 0 1-14 0V8Z"></path>
+            <path d="M9 13h.01M15 13h.01M10 16c1.2.7 2.8.7 4 0"></path>
+          </svg>
+          <span>Cat</span>
+        </button>
+        <button type="button" class="tab-button" id="settingsTab" data-panel-target="settingsPanel" role="tab" aria-selected="false" aria-controls="settingsPanel" tabindex="-1">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3.5"></circle>
+            <path d="M12 3v3m0 12v3M3 12h3m12 0h3m-3.4-6.4-2.1 2.1M8.5 15.5l-2.1 2.1m0-12 2.1 2.1m7 7 2.1 2.1"></path>
+          </svg>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <section class="panel is-active" id="timersPanel" role="tabpanel" aria-labelledby="timersTab">
+        <div class="sub-card-title">
+          <h3>Timers</h3>
+          <span>Stand, drink, focus</span>
+        </div>
+
+        <div class="timer-card" data-timer-card="sedentary">
+          <label class="check-row">
+            <input type="checkbox" id="sedentaryEnabled">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 20h8"></path><path d="M12 4v16"></path><path d="m7 9 5-5 5 5"></path></svg>
+            <span>Stand up reminder</span>
+          </label>
+          <div class="timer-card-body">
+            <div class="duration-control" data-duration-control data-input-id="sedentaryInterval">
+              <button type="button" class="duration-step" data-duration-step="-5" aria-label="Decrease stand interval">-</button>
+              <div class="duration-dial" role="slider" tabindex="0" aria-label="Stand interval" aria-valuemin="5" aria-valuemax="240" aria-valuenow="45">
+                <span data-duration-value>45</span>
+                <small>min</small>
+              </div>
+              <button type="button" class="duration-step" data-duration-step="5" aria-label="Increase stand interval">+</button>
+            </div>
+            <div class="duration-presets" aria-label="Stand reminder presets">
+              <button type="button" class="chip-button" data-duration-preset="30" data-input-id="sedentaryInterval">30m</button>
+              <button type="button" class="chip-button" data-duration-preset="45" data-input-id="sedentaryInterval">45m</button>
+              <button type="button" class="chip-button" data-duration-preset="60" data-input-id="sedentaryInterval">60m</button>
+            </div>
+            <details class="advanced-fields">
+              <summary>Precise settings</summary>
+              <div class="field">
+                <label for="sedentaryInterval">Every N active minutes</label>
+                <input type="number" id="sedentaryInterval" min="5" max="240" step="5" inputmode="numeric" value="45">
+              </div>
+              <div class="field">
+                <label for="idleThresholdMinutes">Idle reset threshold</label>
+                <input type="number" id="idleThresholdMinutes" min="1" max="60" step="1" inputmode="numeric" value="5">
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="timer-card" data-timer-card="hydration">
+          <label class="check-row">
+            <input type="checkbox" id="hydrationEnabled">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11Z"></path><path d="M9 15.5c.8 1.2 1.8 1.8 3 1.8"></path></svg>
+            <span>Water reminder</span>
+          </label>
+          <div class="timer-card-body">
+            <div class="duration-control" data-duration-control data-input-id="hydrationInterval">
+              <button type="button" class="duration-step" data-duration-step="-5" aria-label="Decrease water interval">-</button>
+              <div class="duration-dial" role="slider" tabindex="0" aria-label="Water interval" aria-valuemin="5" aria-valuemax="240" aria-valuenow="60">
+                <span data-duration-value>60</span>
+                <small>min</small>
+              </div>
+              <button type="button" class="duration-step" data-duration-step="5" aria-label="Increase water interval">+</button>
+            </div>
+            <div class="duration-presets" aria-label="Water reminder presets">
+              <button type="button" class="chip-button" data-duration-preset="30" data-input-id="hydrationInterval">30m</button>
+              <button type="button" class="chip-button" data-duration-preset="45" data-input-id="hydrationInterval">45m</button>
+              <button type="button" class="chip-button" data-duration-preset="60" data-input-id="hydrationInterval">60m</button>
+              <button type="button" class="chip-button" data-duration-preset="90" data-input-id="hydrationInterval">90m</button>
+            </div>
+            <details class="advanced-fields">
+              <summary>Precise settings</summary>
+              <div class="field">
+                <label for="hydrationInterval">Every N minutes</label>
+                <input type="number" id="hydrationInterval" min="5" max="240" step="5" inputmode="numeric" value="60">
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="timer-card" data-timer-card="pomodoro">
+          <label class="check-row">
+            <input type="checkbox" id="pomodoroEnabled">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 7c4 0 7 2.7 7 6.4 0 4.2-3.2 7.1-7 7.1s-7-2.9-7-7.1C5 9.7 8 7 12 7Z"></path><path d="M12 7c-.2-2 1-3.4 3-4"></path><path d="M9 6c1.4-.7 3.5-.7 5 0"></path></svg>
+            <span>Pomodoro</span>
+          </label>
+          <div class="timer-card-body">
+            <div class="pomodoro-dials">
+              <div>
+                <div class="duration-control" data-duration-control data-input-id="pomodoroFocus">
+                  <button type="button" class="duration-step" data-duration-step="-5" aria-label="Decrease focus minutes">-</button>
+                  <div class="duration-dial" role="slider" tabindex="0" aria-label="Focus minutes" aria-valuemin="5" aria-valuemax="120" aria-valuenow="25">
+                    <span data-duration-value>25</span>
+                    <small>focus</small>
+                  </div>
+                  <button type="button" class="duration-step" data-duration-step="5" aria-label="Increase focus minutes">+</button>
+                </div>
+                <div class="duration-presets" aria-label="Focus presets">
+                  <button type="button" class="chip-button" data-duration-preset="25" data-input-id="pomodoroFocus">25m</button>
+                  <button type="button" class="chip-button" data-duration-preset="50" data-input-id="pomodoroFocus">50m</button>
+                </div>
+              </div>
+              <div>
+                <div class="duration-control" data-duration-control data-input-id="pomodoroBreak">
+                  <button type="button" class="duration-step" data-duration-step="-1" aria-label="Decrease break minutes">-</button>
+                  <div class="duration-dial" role="slider" tabindex="0" aria-label="Break minutes" aria-valuemin="1" aria-valuemax="60" aria-valuenow="5">
+                    <span data-duration-value>5</span>
+                    <small>break</small>
+                  </div>
+                  <button type="button" class="duration-step" data-duration-step="1" aria-label="Increase break minutes">+</button>
+                </div>
+                <div class="duration-presets" aria-label="Break presets">
+                  <button type="button" class="chip-button" data-duration-preset="5" data-input-id="pomodoroBreak">5m</button>
+                  <button type="button" class="chip-button" data-duration-preset="10" data-input-id="pomodoroBreak">10m</button>
+                </div>
+              </div>
+            </div>
+            <details class="advanced-fields">
+              <summary>Precise settings</summary>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="pomodoroFocus">Focus minutes</label>
+                  <input type="number" id="pomodoroFocus" min="5" max="120" step="5" inputmode="numeric" value="25">
+                </div>
+                <div class="field">
+                  <label for="pomodoroBreak">Break minutes</label>
+                  <input type="number" id="pomodoroBreak" min="1" max="60" step="1" inputmode="numeric" value="5">
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="tasksPanel" role="tabpanel" aria-labelledby="tasksTab" hidden>
+        <div class="sub-card-title">
+          <h3>Tasks</h3>
+          <span>Lightweight due reminders</span>
+        </div>
+        <div class="field">
+          <label for="taskTitle">Task</label>
+          <input type="text" id="taskTitle" maxlength="120" placeholder="Water the plants" list="taskTemplateList" autocomplete="off">
+          <datalist id="taskTemplateList"></datalist>
+          <p class="field-hint" id="taskTemplateHint">Choose a common task or type your own.</p>
+        </div>
+        <div class="field">
+          <label for="taskTime">Remind me at</label>
+          <input type="datetime-local" id="taskTime">
+          <p class="field-error" id="taskTimeError" role="alert"></p>
+        </div>
+        <div class="quick-time-row" aria-label="Quick task reminder times">
+          <button type="button" class="chip-button" data-task-offset-minutes="15">+15m</button>
+          <button type="button" class="chip-button" data-task-offset-minutes="30">+30m</button>
+          <button type="button" class="chip-button" data-task-offset-minutes="60">+1h</button>
+          <button type="button" class="chip-button" data-task-offset-minutes="180">+3h</button>
+        </div>
+        <button type="button" id="addTaskBtn" class="secondary">Add Task Reminder</button>
+        <div id="taskList" class="task-list"></div>
+      </section>
+
+      <section class="panel" id="catPanel" role="tabpanel" aria-labelledby="catTab" hidden>
+        <div class="sub-card-title">
+          <h3>Cat</h3>
+          <span>Use the default cat or your own</span>
+        </div>
+        <div class="cat-preview" id="catPreview" aria-live="polite">
+          <div class="cat-preview-stage" id="catPreviewStage">
+            <img id="catPreviewImage" src="../../assets/break-neko-icon128.png" alt="Cat preview">
+            <video id="catPreviewVideo" muted loop preload="metadata"></video>
+          </div>
+          <span id="catPreviewLabel">Default cat</span>
+        </div>
+        <label class="check-row">
+          <input type="checkbox" id="petEnabled">
+          <span>Show desktop pet</span>
+        </label>
+        <p class="field-hint" id="petHelpText">Shows a draggable cat. Double-click it to summon a break.</p>
+        <div class="field-grid">
+          <button type="button" id="chooseCatBtn" class="secondary">Choose My Cat</button>
+          <button type="button" id="clearCatBtn" class="secondary">Use Default</button>
+        </div>
+        <div class="field">
+          <label for="catSizeMode">Overlay size</label>
+          <select id="catSizeMode">
+            <option value="screen" data-i18n-option="catSizeScreen">Full screen</option>
+            <option value="half" data-i18n-option="catSizeHalf">1/2 screen</option>
+            <option value="quarter" data-i18n-option="catSizeQuarter">1/4 screen</option>
+            <option value="custom" data-i18n-option="catSizeCustom">Custom</option>
+          </select>
+        </div>
+        <div class="field" id="catCustomSizeField">
+          <label for="catCustomSize">Custom size (% of screen)</label>
+          <input type="range" id="catCustomSize" min="20" max="100" step="5" value="50">
+          <output id="catCustomSizeValue" for="catCustomSize">50%</output>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="catOffsetX">Horizontal offset</label>
+            <input type="number" id="catOffsetX" min="-40" max="40" value="0">
+          </div>
+        </div>
+        <div class="field">
+          <label for="catOffsetY">Vertical offset</label>
+          <input type="number" id="catOffsetY" min="-40" max="40" value="0">
+        </div>
+      </section>
+
+      <section class="panel" id="settingsPanel" role="tabpanel" aria-labelledby="settingsTab" hidden>
+        <div class="sub-card-title">
+          <h3>Settings</h3>
+          <span>Interruptions and quiet time</span>
+        </div>
+        <div class="field">
+          <label for="languageSelect">Language</label>
+          <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="reminderIntensity">Reminder intensity</label>
+          <select id="reminderIntensity">
+            <option value="notification" data-i18n-option="intensityNotification">Light: system notification</option>
+            <option value="overlay" data-i18n-option="intensityOverlay">Medium: transparent cat overlay</option>
+            <option value="fullscreen" data-i18n-option="intensityFullscreen">Strong: fullscreen cat break</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="breakTime">Cat overlay countdown (minutes)</label>
+          <input type="number" id="breakTime" min="1" max="60" step="1" inputmode="numeric" value="5">
+        </div>
+        <div class="field">
+          <label for="snoozeMinutes">Snooze duration (minutes)</label>
+          <input type="number" id="snoozeMinutes" min="1" max="60" step="1" inputmode="numeric" value="5">
+        </div>
+        <button type="button" id="pause30Btn" class="quiet">Pause 30 Minutes</button>
+      </section>
+
+      <div class="actions">
+        <button type="submit" id="saveBtn">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="m5 12.5 4.5 4.5L19 7"></path>
+          </svg>
+          <span>Save Settings</span>
+        </button>
+      </div>
+
+      <div class="saved" id="savedMsg" role="status" aria-live="polite">Saved!</div>
+    </form>
+  </main>
+
+  <script src="../shared.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

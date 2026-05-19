@@ -1,0 +1,46 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#petIcon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: grab;
+  -webkit-app-region: drag;
+}
+
+#petIcon:active {
+  cursor: grabbing;
+}
+
+#petBubble {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(4, 10, 22, 0.82);
+  color: #fff;
+  font: 11px/1.2 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+}
