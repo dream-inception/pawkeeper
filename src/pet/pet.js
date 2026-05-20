@@ -88,6 +88,7 @@ function attachPointerInteractions(element) {
       pointerId: event.pointerId,
       startX: event.screenX,
       startY: event.screenY,
+      startedAt: performance.now(),
       dragging: false,
     };
     api.beginPetDrag?.().catch(() => {});

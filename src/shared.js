@@ -36,9 +36,29 @@
     };
   }
 
+  function toPreviewFileUrl(filePath) {
+    if (!filePath) return '';
+
+    const rawPath = String(filePath);
+    if (/^(file|https?|data):/i.test(rawPath)) return rawPath;
+
+    const normalizedPath = rawPath.replace(/\\/g, '/');
+    if (/^[a-zA-Z]:\//.test(normalizedPath)) {
+      return encodeURI(`file:///${normalizedPath}`);
+    }
+    if (normalizedPath.startsWith('//')) {
+      return encodeURI(`file:${normalizedPath}`);
+    }
+    if (normalizedPath.startsWith('/')) {
+      return encodeURI(`file://${normalizedPath}`);
+    }
+    return encodeURI(`file://${normalizedPath}`);
+  }
+
   return {
     DEFAULT_SETTINGS,
     clampNumber,
     normalizeSettings,
+    toPreviewFileUrl,
   };
 });

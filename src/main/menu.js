@@ -18,6 +18,7 @@ function createMenuController({
     tray = new Tray(trayIcon);
     tray.setToolTip('Break Neko');
     tray.on('click', showMainWindow);
+    tray.on('double-click', showMainWindow);
     refreshTrayMenu();
   }
 
@@ -73,6 +74,11 @@ function createMenuController({
   }
 
   function createApplicationMenu() {
+    if (process.platform === 'win32') {
+      Menu.setApplicationMenu(null);
+      return;
+    }
+
     const language = getSettings()?.language || defaultLanguage;
     Menu.setApplicationMenu(Menu.buildFromTemplate([
       {

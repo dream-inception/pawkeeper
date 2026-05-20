@@ -58,6 +58,7 @@ function createPetWindowController({
       skipTaskbar: true,
       alwaysOnTop: settings.pet.alwaysOnTop,
       backgroundColor: '#00000000',
+      ...(process.platform === 'win32' ? { roundedCorners: false } : {}),
       webPreferences: {
         preload: getSourcePath('preload.js'),
         contextIsolation: true,

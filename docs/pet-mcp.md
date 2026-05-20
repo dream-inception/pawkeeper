@@ -68,14 +68,14 @@ Break Neko then:
 - Listens on all local network interfaces.
 - Advertises an mDNS service named `Break Neko Pet`.
 - Uses service type `_mcp._tcp`.
-- Recommends a stable local domain like `http://YOUR-MAC.local:8765/mcp`.
+- Recommends a stable local domain like `http://YOUR-COMPUTER.local:8765/mcp`.
 - Publishes TXT metadata with `mcpPath=/mcp`, `statePath=/state`, and `auth=bearer`.
-- Shows the `.local` domain URL in the settings panel. IP URLs are shown only as fallback/diagnostic values.
+- Shows the `.local` domain URL in the settings panel. IP URLs are also shown as fallback values, and are often the most reliable choice on Windows LANs.
 
 Other devices still need the bearer token shown in Break Neko settings:
 
 ```bash
-curl -X POST http://YOUR-MAC.local:8765/state \
+curl -X POST http://YOUR-COMPUTER.local:8765/state \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   --data '{"state":"waving","playCount":3,"message":"Hello from LAN"}'
@@ -104,13 +104,16 @@ Security notes:
 
 - Leave LAN/mDNS off unless you need another device to control the pet.
 - macOS may ask for local network permission or firewall permission.
+- Windows may show a Defender Firewall prompt the first time LAN mode binds to the network. Allow private-network access if you want other devices to connect.
 - Anyone with network reachability and the token can control the pet state.
 
 ## Troubleshooting LAN
 
 - `.local` does not resolve: confirm LAN/mDNS is enabled, then try the IP fallback shown in settings.
 - `curl` connects by IP but not domain: Bonjour/mDNS name resolution is blocked or unsupported on that client.
-- Other devices cannot connect: allow Break Neko/Electron through macOS firewall and grant Local Network permission if prompted.
+- Other devices cannot connect on macOS: allow Break Neko/Electron through the firewall and grant Local Network permission if prompted.
+- Other devices cannot connect on Windows: allow Break Neko/Electron through Windows Defender Firewall for private networks, then retry the IP URL shown in settings.
+- Windows `.local` lookup is unreliable on some networks unless Bonjour/mDNS support is available. Prefer the IP URL for Windows-to-LAN testing.
 - Cursor cannot connect: use the local `127.0.0.1` config for same-machine Cursor. Use the `.local` config only for another device.
 - Token rejected: copy the current token from settings. If you regenerated it, old configs must be updated.
 

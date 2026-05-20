@@ -12,8 +12,8 @@ kept explicit.
   normalization, and main-process labels.
 - `src/main/timer-service.js` owns reminder timing, queueing, snooze/defer
   behavior, task due detection, and Pomodoro phase state.
-- `src/main/break-window.js` owns the overlay/fullscreen break window, macOS
-  work-area alignment, mouse passthrough, and layout diagnostics.
+- `src/main/break-window.js` owns the overlay/fullscreen break window,
+  platform-aware work-area alignment, mouse passthrough, and layout diagnostics.
 - `src/main/reminders.js` decides how a reminder is presented: system
   notification, transparent overlay, or fullscreen break.
 - `src/main/menu.js` owns the app menu and tray menu.
@@ -31,7 +31,7 @@ kept explicit.
 - `src/shared.js` contains shared settings helpers and legacy settings
   migration utilities.
 
-## Windows
+## App Windows
 
 - Settings window: `src/renderer/index.html`, `src/renderer/app.js`,
   `src/renderer/styles.css`.
@@ -60,6 +60,10 @@ runtime version, comes from `app:get-info` rather than hardcoded renderer text.
 truth for root, source, dist, asset, and unpacked asset paths. Cat videos are
 listed in `asarUnpack` because the break window streams them as files.
 
+Runtime development is supported on macOS and Windows. The current builder
+configuration only packages macOS artifacts; Windows installer/portable targets
+are intentionally left for a release packaging pass.
+
 ## Commands
 
 - `npm run dev`: start the Electron app.
@@ -74,6 +78,8 @@ listed in `asarUnpack` because the break window streams them as files.
   land in a focused controller or service module.
 - Keep settings migrations in `settings.js` or `src/shared.js`; avoid ad hoc
   normalization in renderer code.
+- Keep Windows file paths going through shared URL/path helpers before assigning
+  them to renderer `img`, `video`, or canvas preview sources.
 - Prefer adding unit tests around pure services and controllers before expanding
   Electron UI automation.
 - Do not reintroduce browser extension source into the active app tree. Git

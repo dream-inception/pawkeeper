@@ -1,11 +1,12 @@
 # Break Neko
 
-Break Neko is a macOS desktop break reminder that brings a cat to guard
-your screen when it is time to stand up, drink water, focus, or finish a task.
+Break Neko is a desktop break reminder for macOS and Windows that brings a cat
+to guard your screen when it is time to stand up, drink water, focus, or finish
+a task.
 
-The repository is organized around the Electron macOS desktop app. The earlier
-browser extension source has been removed from the active codebase; Git history
-keeps that work available for reference.
+The repository is organized around the Electron desktop app. The earlier browser
+extension source has been removed from the active codebase; Git history keeps
+that work available for reference.
 
 ## Features
 
@@ -15,7 +16,7 @@ keeps that work available for reference.
 - Custom cat image or video support.
 - Codex pet import with an animated desktop pet library.
 - Optional local MCP/HTTP pet control for Cursor, hooks, and LAN devices.
-- Menu bar controls for starting, pausing, summoning the cat, and quiet time.
+- Tray/menu controls for starting, pausing, summoning the cat, and quiet time.
 - Local settings storage. Custom cat media stays on your device.
 
 ## Development
@@ -31,6 +32,9 @@ Run the desktop app:
 ```bash
 npm run dev
 ```
+
+Development runs are supported on macOS and Windows. Windows packaging is not
+configured yet; use `npm run dev` for compatibility testing on Windows.
 
 Run syntax checks:
 

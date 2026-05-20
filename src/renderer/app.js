@@ -146,6 +146,7 @@ const I18N = {
     mcpUsageHint: (path) => `Cursor: paste this into ${path}, then restart Cursor.`,
     mcpHttpHint: 'Simple HTTP control for hooks:',
     mcpLanHint: (urls) => `LAN URLs: ${urls.join(', ')}`,
+    mcpWindowsLanHint: 'Windows LAN note: use an IP URL first if .local does not resolve.',
     mcpMdnsHint: (name, type) => `mDNS: ${name} (${type})`,
     copyMcpConfig: 'Copy Cursor Config',
     copyMcpToken: 'Copy Token',
@@ -280,6 +281,7 @@ const I18N = {
     mcpUsageHint: (path) => `Cursor：把下面配置放到 ${path}，然后重启 Cursor。`,
     mcpHttpHint: '给 hooks 使用的简单 HTTP 控制：',
     mcpLanHint: (urls) => `局域网 URL：${urls.join(', ')}`,
+    mcpWindowsLanHint: 'Windows 局域网提示：如果 .local 无法解析，优先使用 IP URL。',
     mcpMdnsHint: (name, type) => `mDNS：${name}（${type}）`,
     copyMcpConfig: '复制 Cursor 配置',
     copyMcpToken: '复制 Token',
@@ -721,9 +723,7 @@ function updateCatSizeControls() {
 }
 
 function toPreviewFileUrl(filePath) {
-  if (!filePath) return '';
-  if (/^(file|https?|data):/i.test(filePath)) return filePath;
-  return encodeURI(`file://${filePath}`);
+  return shared.toPreviewFileUrl(filePath);
 }
 
 function getLocalDateTimeValue(date = new Date()) {
@@ -1097,6 +1097,7 @@ async function renderMcpStatus() {
           t('mcpRunning', status.stateUrl?.replace('/state', '/mcp') || status.url),
           status.localDomainUrl ? t('mcpLanHint', [status.localDomainUrl]) : '',
           status.mdnsService ? t('mcpMdnsHint', status.mdnsService.name, status.mdnsService.type) : '',
+          status.platform === 'win32' && status.lanUrls?.length ? t('mcpWindowsLanHint') : '',
           status.lanUrls?.length ? `IP fallback: ${status.lanUrls.join(', ')}` : '',
           t('mcpUsageHint', status.cursorGlobalPath || '~/.cursor/mcp.json'),
           status.localCursorConfigSnippet || status.cursorConfigSnippet || status.configSnippet,

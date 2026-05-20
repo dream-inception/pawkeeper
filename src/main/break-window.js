@@ -18,6 +18,8 @@ function createBreakWindowController({
   let breakWindow = null;
   let resumeTimerAfterBreak = false;
   let breakMousePassthroughAllowed = false;
+  let isClosingBreakWindow = false;
+  let skipRequested = false;
 
   function showBreakWindow({
     testMode = false,
@@ -34,7 +36,12 @@ function createBreakWindowController({
       if (!testMode) {
         syncBreakWindowBounds(breakWindow);
       }
-      breakMousePassthroughAllowed = presentation === 'overlay' && !testMode && !isBreakAutomationTestMode();
+      breakMousePassthroughAllowed = canUseBreakMousePassthrough({
+        presentation,
+        testMode,
+        platform: process.platform,
+        automationTestMode: isBreakAutomationTestMode(),
+      });
       breakWindow.loadFile(getSourcePath('break', 'index.html'), {
         query: getBreakWindowQuery({
           breakLayout,
@@ -56,7 +63,14 @@ function createBreakWindowController({
     getTimerService()?.pause();
     const bounds = getBreakWindowBounds(testMode);
     const isFullscreen = presentation === 'fullscreen' && !testMode;
-    breakMousePassthroughAllowed = presentation === 'overlay' && !testMode && !isBreakAutomationTestMode();
+    breakMousePassthroughAllowed = canUseBreakMousePassthrough({
+      presentation,
+      testMode,
+      platform: process.platform,
+      automationTestMode: isBreakAutomationTestMode(),
+    });
+    isClosingBreakWindow = false;
+    skipRequested = false;
     breakWindow = new BrowserWindow({
       width: bounds.width,
       height: bounds.height,
@@ -75,6 +89,7 @@ function createBreakWindowController({
       hasShadow: false,
       backgroundColor: '#00000000',
       ...(process.platform === 'darwin' && !testMode ? { type: 'panel' } : {}),
+      ...(process.platform === 'win32' && !testMode ? { roundedCorners: false } : {}),
       webPreferences: {
         preload: getSourcePath('preload.js'),
         contextIsolation: true,
@@ -83,20 +98,15 @@ function createBreakWindowController({
     });
 
     breakWindow.webContents.on('before-input-event', (event, input) => {
-      const key = String(input.key || '').toLowerCase();
-      if (
-        key === 'escape' ||
-        (input.meta && key === 'w') ||
-        (input.meta && key === 'q')
-      ) {
+      if (isBreakSkipShortcut(input)) {
         event.preventDefault();
-        onSkipBreak();
+        requestSkipBreak();
       }
     });
 
     if (!testMode) {
       syncBreakWindowBounds(breakWindow);
-      if (!skipAllWorkspaces) {
+      if (process.platform !== 'win32' && !skipAllWorkspaces) {
         breakWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
       }
       breakWindow.setAlwaysOnTop(true, 'screen-saver');
@@ -134,8 +144,19 @@ function createBreakWindowController({
       }
     });
 
+    breakWindow.on('close', (event) => {
+      if (isClosingBreakWindow || testMode) {
+        return;
+      }
+
+      event.preventDefault();
+      requestSkipBreak();
+    });
+
     breakWindow.on('closed', () => {
       breakMousePassthroughAllowed = false;
+      isClosingBreakWindow = false;
+      skipRequested = false;
       breakWindow = null;
     });
 
@@ -192,26 +213,7 @@ function createBreakWindowController({
     }
 
     const display = getBreakTargetDisplay();
-    const { bounds, workArea } = display;
-
-    // On macOS, Stage Manager / menu bar shrink the usable work area. Using full
-    // display bounds leaves the window centered in the remaining strip, which
-    // makes the whole overlay look shifted right.
-    if (process.platform === 'darwin') {
-      return {
-        x: Math.round(workArea.x),
-        y: Math.round(workArea.y),
-        width: Math.round(workArea.width),
-        height: Math.round(workArea.height),
-      };
-    }
-
-    return {
-      x: Math.round(bounds.x),
-      y: Math.round(bounds.y),
-      width: Math.round(bounds.width),
-      height: Math.round(bounds.height),
-    };
+    return getBreakWindowBoundsForDisplay(display, process.platform);
   }
 
   function getBreakLayoutMetrics() {
@@ -397,8 +399,15 @@ function createBreakWindowController({
 
   function closeBreakWindow() {
     if (breakWindow && !breakWindow.isDestroyed()) {
+      isClosingBreakWindow = true;
       breakWindow.close();
     }
+  }
+
+  function requestSkipBreak() {
+    if (skipRequested) return;
+    skipRequested = true;
+    onSkipBreak();
   }
 
   return {
@@ -411,6 +420,52 @@ function createBreakWindowController({
   };
 }
 
+function getBreakWindowBoundsForDisplay(display, platform = process.platform) {
+  const { bounds, workArea } = display;
+  // On macOS, Stage Manager / menu bar shrink the usable work area. Using full
+  // display bounds leaves the window centered in the remaining strip, which
+  // makes the whole overlay look shifted right. On Windows, workArea avoids
+  // covering the taskbar and keeps HUD controls reachable.
+  if (platform === 'darwin' || platform === 'win32') {
+    return {
+      x: Math.round(workArea.x),
+      y: Math.round(workArea.y),
+      width: Math.round(workArea.width),
+      height: Math.round(workArea.height),
+    };
+  }
+
+  return {
+    x: Math.round(bounds.x),
+    y: Math.round(bounds.y),
+    width: Math.round(bounds.width),
+    height: Math.round(bounds.height),
+  };
+}
+
+function canUseBreakMousePassthrough({
+  presentation,
+  testMode,
+  platform = process.platform,
+  automationTestMode = false,
+}) {
+  return presentation === 'overlay' &&
+    !testMode &&
+    !automationTestMode &&
+    platform === 'darwin';
+}
+
+function isBreakSkipShortcut(input = {}) {
+  const key = String(input.key || '').toLowerCase();
+  return key === 'escape' ||
+    (key === 'f4' && input.alt) ||
+    (key === 'w' && (input.meta || input.control)) ||
+    (key === 'q' && (input.meta || input.control));
+}
+
 module.exports = {
+  canUseBreakMousePassthrough,
   createBreakWindowController,
+  getBreakWindowBoundsForDisplay,
+  isBreakSkipShortcut,
 };

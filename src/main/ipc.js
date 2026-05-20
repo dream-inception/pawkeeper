@@ -62,7 +62,11 @@ function registerIpcHandlers({
     }
 
     const shouldPassThrough = getBreakMousePassthroughAllowed() && enabled === true;
-    breakWindow.setIgnoreMouseEvents(shouldPassThrough, { forward: true });
+    if (process.platform === 'darwin') {
+      breakWindow.setIgnoreMouseEvents(shouldPassThrough, { forward: true });
+    } else {
+      breakWindow.setIgnoreMouseEvents(shouldPassThrough);
+    }
     return shouldPassThrough;
   });
   ipcMain.handle('reminder:snooze', (_event, minutes) => {

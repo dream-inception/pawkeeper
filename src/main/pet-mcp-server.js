@@ -148,43 +148,53 @@ function createPetMcpServerController({
 
   function getStatus() {
     const token = ensureToken();
+    const settings = getSettings();
+    const lanUrls = status.port && settings.pet.mcpLanEnabled
+      ? getLanAddresses().map((address) => `http://${address}:${status.port}${MCP_PATH}`)
+      : [];
+    const lanStateUrls = status.port && settings.pet.mcpLanEnabled
+      ? getLanAddresses().map((address) => `http://${address}:${status.port}${STATE_PATH}`)
+      : [];
+    const localDomain = settings.pet.mcpLanEnabled ? getConfiguredLocalDomain(settings) : '';
+    const localDomainUrl = status.port && settings.pet.mcpLanEnabled
+      ? `http://${localDomain}:${status.port}${MCP_PATH}`
+      : '';
+    const localDomainStateUrl = status.port && settings.pet.mcpLanEnabled
+      ? `http://${localDomain}:${status.port}${STATE_PATH}`
+      : '';
+    const preferredLanUrl = process.platform === 'win32' && lanUrls.length > 0
+      ? lanUrls[0]
+      : localDomainUrl;
     return {
       ...status,
-      enabled: getSettings().pet.mcpEnabled,
+      enabled: settings.pet.mcpEnabled,
       token,
+      platform: process.platform,
       mcpPath: MCP_PATH,
       stateUrl: status.port ? `http://${DEFAULT_HOST}:${status.port}${STATE_PATH}` : '',
       healthUrl: status.port ? `http://${DEFAULT_HOST}:${status.port}${HEALTH_PATH}` : '',
-      lanEnabled: getSettings().pet.mcpLanEnabled,
-      localDomain: getSettings().pet.mcpLanEnabled ? getConfiguredLocalDomain(getSettings()) : '',
-      localDomainUrl: status.port && getSettings().pet.mcpLanEnabled
-        ? `http://${getConfiguredLocalDomain(getSettings())}:${status.port}${MCP_PATH}`
-        : '',
-      localDomainStateUrl: status.port && getSettings().pet.mcpLanEnabled
-        ? `http://${getConfiguredLocalDomain(getSettings())}:${status.port}${STATE_PATH}`
-        : '',
-      mdnsService: getSettings().pet.mcpLanEnabled && status.running
+      lanEnabled: settings.pet.mcpLanEnabled,
+      localDomain,
+      localDomainUrl,
+      localDomainStateUrl,
+      mdnsService: settings.pet.mcpLanEnabled && status.running
         ? {
           name: MDNS_SERVICE_NAME,
           type: `_${MDNS_SERVICE_TYPE}._tcp`,
-          host: getConfiguredLocalDomain(getSettings()),
+          host: localDomain,
           path: MCP_PATH,
           statePath: STATE_PATH,
         }
         : null,
-      lanUrls: status.port && getSettings().pet.mcpLanEnabled
-        ? getLanAddresses().map((address) => `http://${address}:${status.port}${MCP_PATH}`)
-        : [],
-      lanStateUrls: status.port && getSettings().pet.mcpLanEnabled
-        ? getLanAddresses().map((address) => `http://${address}:${status.port}${STATE_PATH}`)
-        : [],
+      lanUrls,
+      lanStateUrls,
       cursorGlobalPath: '~/.cursor/mcp.json',
       cursorProjectPath: '.cursor/mcp.json',
       localCursorConfigSnippet: status.port
         ? createMcpConfigSnippet(`http://${DEFAULT_HOST}:${status.port}${MCP_PATH}`, token)
         : '',
-      lanCursorConfigSnippet: status.port && getSettings().pet.mcpLanEnabled
-        ? createMcpConfigSnippet(`http://${getConfiguredLocalDomain(getSettings())}:${status.port}${MCP_PATH}`, token)
+      lanCursorConfigSnippet: preferredLanUrl
+        ? createMcpConfigSnippet(preferredLanUrl, token)
         : '',
       cursorConfigSnippet: status.url
         ? createMcpConfigSnippet(status.url, token)

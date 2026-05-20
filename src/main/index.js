@@ -50,6 +50,17 @@ let reminderPresenter;
 async function bootstrap() {
   ({ default: Store } = await import('electron-store'));
   app.setName('Break Neko');
+  app.setAppUserModelId('dev.dream-inception.break-neko');
+
+  const hasSingleInstanceLock = app.requestSingleInstanceLock();
+  if (!hasSingleInstanceLock) {
+    app.quit();
+    return;
+  }
+
+  app.on('second-instance', () => {
+    showMainWindow();
+  });
 
   if (process.env.BREAK_NEKO_TEST_PROFILE === '1') {
     app.setPath('userData', path.join(os.tmpdir(), 'break-neko-test-profile'));
@@ -174,6 +185,7 @@ async function bootstrap() {
     getAppInfo: () => ({
       name: app.getName(),
       version: app.getVersion(),
+      platform: process.platform,
     }),
     getPublicTimerState,
     getSettings,

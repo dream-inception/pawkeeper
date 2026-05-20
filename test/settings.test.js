@@ -26,6 +26,25 @@ test('normalizes base settings with safe defaults', () => {
   assert.equal(settings.catEnabled, true);
 });
 
+test('builds preview file URLs for POSIX and Windows paths', () => {
+  assert.equal(
+    shared.toPreviewFileUrl('/tmp/My Cat/cat.png'),
+    'file:///tmp/My%20Cat/cat.png'
+  );
+  assert.equal(
+    shared.toPreviewFileUrl('C:\\Users\\Neko Cat\\spritesheet.webp'),
+    'file:///C:/Users/Neko%20Cat/spritesheet.webp'
+  );
+  assert.equal(
+    shared.toPreviewFileUrl('\\\\neko-nas\\pets\\cat.png'),
+    'file://neko-nas/pets/cat.png'
+  );
+  assert.equal(
+    shared.toPreviewFileUrl('file:///C:/Users/Neko%20Cat/cat.png'),
+    'file:///C:/Users/Neko%20Cat/cat.png'
+  );
+});
+
 test('normalizes desktop settings with safe defaults and legacy cat scale', () => {
   const settings = normalizeDesktopSettings({
     language: 'zh',
