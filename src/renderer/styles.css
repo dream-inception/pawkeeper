@@ -1525,7 +1525,8 @@ select:focus-visible {
 }
 
 .cat-preview img,
-.cat-preview video {
+.cat-preview video,
+.cat-preview canvas {
   max-width: 72%;
   max-height: 96px;
   object-fit: contain;
@@ -1533,10 +1534,121 @@ select:focus-visible {
   filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.38));
 }
 
+.cat-preview canvas {
+  width: auto;
+  height: 96px;
+}
+
 .cat-preview span {
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 700;
+}
+
+.codex-pet-list {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.codex-pet-list:empty {
+  display: none;
+}
+
+.codex-pet-item {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--stroke-subtle);
+  border-radius: 14px;
+  background: rgba(5, 10, 20, 0.36);
+}
+
+.cat-section {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--stroke-subtle);
+}
+
+.cat-section h4 {
+  margin: 0;
+  color: var(--cream);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.codex-pet-thumb {
+  width: 44px;
+  height: 48px;
+  border: 1px solid rgba(98, 217, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  object-fit: contain;
+}
+
+.codex-pet-item.is-active {
+  border-color: rgba(98, 217, 255, 0.42);
+  background: rgba(98, 217, 255, 0.08);
+}
+
+.codex-pet-copy {
+  min-width: 0;
+}
+
+.codex-pet-copy strong,
+.codex-pet-copy span {
+  display: block;
+}
+
+.codex-pet-copy strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.codex-pet-copy span {
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.codex-pet-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.codex-pet-actions button {
+  width: auto;
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.codex-pet-actions button:disabled {
+  cursor: default;
+  opacity: 0.62;
+  transform: none;
+}
+
+.codex-pet-delete {
+  color: #ffd0c2;
+}
+
+.mcp-status {
+  margin: 10px 0 12px;
+  padding: 10px;
+  border: 1px solid var(--stroke-subtle);
+  border-radius: 12px;
+  background: rgba(5, 10, 20, 0.36);
+  color: var(--text-tertiary);
+  font: 11px/1.45 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .status-copy {
@@ -2315,6 +2427,55 @@ body::before {
 
 #taskTemplateHint {
   margin-top: 8px;
+}
+
+.suggestion-field {
+  position: relative;
+}
+
+.suggestion-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  padding: 6px;
+  border: 1px solid rgba(98, 217, 255, 0.26);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(18, 29, 43, 0.98), rgba(8, 13, 24, 0.98));
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.48),
+    inset 0 1px rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.suggestion-list[hidden] {
+  display: none;
+}
+
+.suggestion-option {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-primary);
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.suggestion-option:hover,
+.suggestion-option.is-active {
+  background: rgba(98, 217, 255, 0.12);
+  color: var(--cream);
+  transform: none;
 }
 
 /* Final color guard: remove leftover warm shadows from earlier polish layers. */

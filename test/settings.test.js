@@ -74,6 +74,10 @@ test('normalizes desktop settings with safe defaults and legacy cat scale', () =
   assert.equal(settings.catDisplay.customSize, 72);
   assert.equal(settings.pet.size, 220);
   assert.equal(settings.pet.alwaysOnTop, false);
+  assert.equal(settings.pet.interactionEnabled, true);
+  assert.equal(settings.pet.interactionMode, 'quiet');
+  assert.equal(settings.pet.mouseReactivity, 50);
+  assert.equal(settings.pet.mcpEnabled, false);
   assert.equal(settings.reminders.sedentary.intervalMinutes, 5);
   assert.equal(settings.reminders.sedentary.idleThresholdMinutes, 60);
   assert.equal(settings.reminders.hydration.enabled, false);
@@ -83,6 +87,131 @@ test('normalizes desktop settings with safe defaults and legacy cat scale', () =
   assert.deepEqual(settings.tasks, [
     { id: 'a', title: 'Ship it', remindAt: '2026-05-19T10:00', done: false },
   ]);
+});
+
+test('normalizes pet interaction settings', () => {
+  const settings = normalizeDesktopSettings({
+    pet: {
+      interactionEnabled: false,
+      interactionMode: 'follow',
+      lookAtCursor: false,
+      pettingEnabled: false,
+      followCursor: true,
+      avoidCursor: true,
+      mouseReactivity: 999,
+      reducedMotion: true,
+      mcpEnabled: false,
+      mcpLocalDomain: 'Neko.local',
+      interactionPausedUntil: '2026-05-19T10:00:00.000Z',
+    },
+  });
+
+  assert.equal(settings.pet.interactionEnabled, false);
+  assert.equal(settings.pet.interactionMode, 'follow');
+  assert.equal(settings.pet.lookAtCursor, false);
+  assert.equal(settings.pet.pettingEnabled, false);
+  assert.equal(settings.pet.followCursor, true);
+  assert.equal(settings.pet.avoidCursor, true);
+  assert.equal(settings.pet.mouseReactivity, 100);
+  assert.equal(settings.pet.reducedMotion, true);
+  assert.equal(settings.pet.mcpEnabled, false);
+  assert.equal(settings.pet.mcpLanEnabled, false);
+  assert.equal(settings.pet.mcpLocalDomain, 'neko.local');
+  assert.equal(settings.pet.interactionPausedUntil, '2026-05-19T10:00:00.000Z');
+});
+
+test('defaults MCP control to off for new settings', () => {
+  const settings = normalizeDesktopSettings({});
+
+  assert.equal(settings.pet.mcpEnabled, false);
+  assert.equal(settings.pet.mcpLanEnabled, false);
+});
+
+test('normalizes MCP LAN access setting', () => {
+  const enabled = normalizeDesktopSettings({
+    pet: {
+      mcpLanEnabled: true,
+    },
+  });
+  assert.equal(enabled.pet.mcpLanEnabled, true);
+
+  const disabled = normalizeDesktopSettings({
+    pet: {
+      mcpLanEnabled: 'yes',
+    },
+  });
+  assert.equal(disabled.pet.mcpLanEnabled, false);
+});
+
+test('normalizes custom MCP local domains', () => {
+  assert.equal(normalizeDesktopSettings({
+    pet: { mcpLocalDomain: ' neko.local ' },
+  }).pet.mcpLocalDomain, 'neko.local');
+  assert.equal(normalizeDesktopSettings({
+    pet: { mcpLocalDomain: 'Neko Pet.local' },
+  }).pet.mcpLocalDomain, 'neko-pet.local');
+  assert.equal(normalizeDesktopSettings({
+    pet: { mcpLocalDomain: '../bad.local' },
+  }).pet.mcpLocalDomain, 'bad.local');
+});
+
+test('normalizes Codex pet library settings', () => {
+  const settings = normalizeDesktopSettings({
+    codexPets: {
+      activeId: 'pet-2',
+      items: [
+        {
+          id: 'pet-1',
+          displayName: 'First Pet',
+          description: 'A steady helper',
+          petJsonPath: '/tmp/pet-1/pet.json',
+          spritesheetPath: '/tmp/pet-1/spritesheet.webp',
+          importedAt: '2026-05-19T10:00:00.000Z',
+        },
+        {
+          id: 'pet-2',
+          displayName: 'Second Pet',
+          petJsonPath: '/tmp/pet-2/pet.json',
+          spritesheetPath: '/tmp/pet-2/spritesheet.webp',
+        },
+        {
+          id: 'pet-1',
+          displayName: 'Duplicate Pet',
+          petJsonPath: '/tmp/pet-1b/pet.json',
+          spritesheetPath: '/tmp/pet-1b/spritesheet.webp',
+        },
+        {
+          id: '',
+          petJsonPath: '/tmp/broken/pet.json',
+          spritesheetPath: '/tmp/broken/spritesheet.webp',
+        },
+      ],
+    },
+  });
+
+  assert.equal(settings.codexPets.activeId, 'pet-2');
+  assert.equal(settings.codexPets.items.length, 2);
+  assert.equal(settings.codexPets.items[0].displayName, 'First Pet');
+  assert.equal(settings.codexPets.items[1].description, '');
+  assert.equal(settings.codexPets.items[1].importedAt, '1970-01-01T00:00:00.000Z');
+});
+
+test('clears invalid active Codex pet id', () => {
+  const settings = normalizeDesktopSettings({
+    codexPets: {
+      activeId: 'missing',
+      items: [
+        {
+          id: 'pet-1',
+          petJsonPath: '/tmp/pet-1/pet.json',
+          spritesheetPath: '/tmp/pet-1/spritesheet.webp',
+        },
+      ],
+    },
+  });
+
+  assert.equal(settings.codexPets.activeId, null);
+  assert.equal(settings.codexPets.items.length, 1);
 });
 
 test('translates main-process labels', () => {

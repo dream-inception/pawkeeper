@@ -24,9 +24,11 @@ const {
 } = require('./settings');
 const { createAutomationTestRunner } = require('./automation-tests');
 const { createBreakWindowController } = require('./break-window');
+const { createCodexPetLibrary } = require('./codex-pet');
 const { createCustomCatPicker } = require('./custom-cat');
 const { registerIpcHandlers } = require('./ipc');
 const { createMenuController } = require('./menu');
+const { createPetMcpServerController } = require('./pet-mcp-server');
 const { createPetWindowController } = require('./pet-window');
 const { createReminderPresenter } = require('./reminders');
 const { createStatsTracker } = require('./stats');
@@ -38,8 +40,10 @@ let timerService;
 let statsTracker;
 let automationTestRunner;
 let breakWindowController;
+let codexPetLibrary;
 let customCatPicker;
 let menuController;
+let petMcpServerController;
 let petWindowController;
 let reminderPresenter;
 
@@ -89,6 +93,13 @@ async function bootstrap() {
     getSettings,
     saveSettings,
   });
+  codexPetLibrary = createCodexPetLibrary({
+    app,
+    dialog,
+    getMainWindow: () => mainWindow,
+    getSettings,
+    saveSettings,
+  });
   petWindowController = createPetWindowController({
     BrowserWindow,
     getAssetPath,
@@ -97,6 +108,13 @@ async function bootstrap() {
     screen,
     toFileUrl,
     updateSettings: (settings) => store.set('settings', normalizeDesktopSettings(settings)),
+  });
+  petMcpServerController = createPetMcpServerController({
+    getSettings,
+    getToken: () => store.get('petMcpToken'),
+    setToken: (token) => store.set('petMcpToken', token),
+    petController: petWindowController,
+    saveSettings,
   });
   reminderPresenter = createReminderPresenter({
     Notification,
@@ -150,6 +168,7 @@ async function bootstrap() {
     clearCustomCat,
     closeBreakWindow,
     completeOnboarding,
+    deleteCodexPet,
     getBreakWindow: () => breakWindowController.getBreakWindow(),
     getBreakMousePassthroughAllowed: () => breakWindowController.getBreakMousePassthroughAllowed(),
     getAppInfo: () => ({
@@ -159,9 +178,22 @@ async function bootstrap() {
     getPublicTimerState,
     getSettings,
     getTimerService: () => timerService,
+    importCodexPet,
     markTaskDone,
+    beginPetDrag: () => petWindowController.beginPetDrag(),
+    movePetBy: (...args) => petWindowController.movePetBy(...args),
+    finishPetDrag: () => petWindowController.finishPetDrag(),
+    getPetRuntimeState: () => petWindowController.getPetRuntimeState(),
+    getPetMcpStatus: () => petMcpServerController.getStatus(),
+    isPetWebContents: (webContents) => petWindowController.isPetWebContents(webContents),
+    rotatePetMcpToken: () => petMcpServerController.rotateToken(),
+    testPetInteraction: () => petWindowController.setPetState('user', 'jumping', {
+      durationMs: 1200,
+      message: getSettings().language === 'zh' ? '我在这里' : 'Here!',
+    }),
     refreshTrayMenu,
     saveSettings,
+    selectCodexPet,
     setDndForMinutes,
     snoozeReminder,
   });
@@ -169,6 +201,7 @@ async function bootstrap() {
   const settings = getSettings();
   updatePetWindow(settings);
   timerService.start();
+  petMcpServerController.start();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -193,6 +226,9 @@ function saveSettings(settings) {
   refreshTrayMenu();
   createApplicationMenu();
   updatePetWindow(normalizedSettings);
+  petMcpServerController?.sync().catch((error) => {
+    console.warn('Failed to sync pet MCP server:', error);
+  });
   return normalizedSettings;
 }
 
@@ -343,7 +379,11 @@ function markTaskDone(taskId) {
 }
 
 function clearCustomCat() {
-  return saveSettings({ ...getSettings(), customCat: null });
+  const settings = getSettings();
+  return saveSettings({
+    ...settings,
+    customCat: null,
+  });
 }
 
 function completeOnboarding() {
@@ -352,6 +392,18 @@ function completeOnboarding() {
 
 async function chooseCustomCat() {
   return customCatPicker.chooseCustomCat();
+}
+
+async function importCodexPet() {
+  return codexPetLibrary.importCodexPet();
+}
+
+function selectCodexPet(petId) {
+  return codexPetLibrary.selectCodexPet(petId);
+}
+
+function deleteCodexPet(petId) {
+  return codexPetLibrary.deleteCodexPet(petId);
 }
 
 function getPublicTimerState(state = timerService?.getState()) {
@@ -366,6 +418,7 @@ function getPublicTimerState(state = timerService?.getState()) {
 function broadcastTimerState(state = timerService?.getState()) {
   if (!state) return;
   const publicState = getPublicTimerState(state);
+  petWindowController?.updateApplicationPetState(publicState);
   refreshTrayMenu();
 
   BrowserWindow.getAllWindows().forEach((window) => {
@@ -381,6 +434,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   app.isQuitting = true;
+  petMcpServerController?.stop();
 });
 
 bootstrap().catch((error) => {

@@ -19,15 +19,27 @@ body {
   justify-content: center;
 }
 
-#petIcon {
+#petIcon,
+#petCanvas {
   width: 100%;
   height: 100%;
-  object-fit: contain;
   cursor: grab;
-  -webkit-app-region: drag;
+  touch-action: none;
 }
 
-#petIcon:active {
+#petIcon {
+  object-fit: contain;
+}
+
+#petCanvas {
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  transition: transform 140ms ease;
+}
+
+#petIcon:active,
+#petCanvas:active {
   cursor: grabbing;
 }
 

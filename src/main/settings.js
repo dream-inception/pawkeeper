@@ -3,6 +3,7 @@ const shared = require('../shared');
 
 const VALID_REMINDER_INTENSITIES = new Set(['notification', 'overlay', 'fullscreen']);
 const VALID_CAT_SIZE_MODES = new Set(['screen', 'half', 'quarter', 'custom']);
+const VALID_PET_INTERACTION_MODES = new Set(['quiet', 'playful', 'follow']);
 
 const DEFAULT_DESKTOP_SETTINGS = Object.freeze({
   ...shared.DEFAULT_SETTINGS,
@@ -12,6 +13,10 @@ const DEFAULT_DESKTOP_SETTINGS = Object.freeze({
   snoozeMinutes: 5,
   dndUntil: null,
   customCat: null,
+  codexPets: {
+    activeId: null,
+    items: [],
+  },
   catDisplay: {
     sizeMode: 'half',
     customSize: 50,
@@ -21,6 +26,18 @@ const DEFAULT_DESKTOP_SETTINGS = Object.freeze({
     size: 120,
     alwaysOnTop: true,
     position: null,
+    interactionEnabled: true,
+    interactionMode: 'quiet',
+    lookAtCursor: true,
+    pettingEnabled: true,
+    followCursor: false,
+    avoidCursor: false,
+    mouseReactivity: 50,
+    reducedMotion: false,
+    mcpEnabled: false,
+    mcpLanEnabled: false,
+    mcpLocalDomain: '',
+    interactionPausedUntil: null,
   },
   reminders: {
     sedentary: {
@@ -112,6 +129,7 @@ function normalizeDesktopSettings(settings) {
     snoozeMinutes: shared.clampNumber(safeSettings.snoozeMinutes, 1, 60, DEFAULT_DESKTOP_SETTINGS.snoozeMinutes),
     dndUntil: typeof safeSettings.dndUntil === 'string' ? safeSettings.dndUntil : null,
     customCat: normalizeCustomCat(safeSettings.customCat),
+    codexPets: normalizeCodexPets(safeSettings.codexPets),
     catDisplay: normalizeCatDisplay(safeSettings.catDisplay, safeSettings.customCat),
     pet: normalizePetSettings(safeSettings.pet),
     reminders: {
@@ -148,7 +166,35 @@ function normalizePetSettings(pet) {
     size: shared.clampNumber(safePet.size, 80, 220, DEFAULT_DESKTOP_SETTINGS.pet.size),
     alwaysOnTop: safePet.alwaysOnTop !== false,
     position,
+    interactionEnabled: safePet.interactionEnabled !== false,
+    interactionMode: VALID_PET_INTERACTION_MODES.has(safePet.interactionMode)
+      ? safePet.interactionMode
+      : DEFAULT_DESKTOP_SETTINGS.pet.interactionMode,
+    lookAtCursor: safePet.lookAtCursor !== false,
+    pettingEnabled: safePet.pettingEnabled !== false,
+    followCursor: safePet.followCursor === true,
+    avoidCursor: safePet.avoidCursor === true,
+    mouseReactivity: shared.clampNumber(safePet.mouseReactivity, 0, 100, DEFAULT_DESKTOP_SETTINGS.pet.mouseReactivity),
+    reducedMotion: safePet.reducedMotion === true,
+    mcpEnabled: safePet.mcpEnabled === true,
+    mcpLanEnabled: safePet.mcpLanEnabled === true,
+    mcpLocalDomain: normalizeLocalDomain(safePet.mcpLocalDomain),
+    interactionPausedUntil: typeof safePet.interactionPausedUntil === 'string'
+      ? safePet.interactionPausedUntil
+      : null,
   };
+}
+
+function normalizeLocalDomain(value) {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return '';
+  const withoutSuffix = trimmed.replace(/\.local$/i, '');
+  const label = withoutSuffix
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 63);
+  return label ? `${label}.local` : '';
 }
 
 function normalizeCatDisplay(catDisplay, legacyCustomCat) {
@@ -198,6 +244,50 @@ function normalizeCustomCat(customCat) {
     name: String(customCat.name || path.basename(customCat.path)),
     offsetX: shared.clampNumber(customCat.offsetX, -40, 40, 0),
     offsetY: shared.clampNumber(customCat.offsetY, -40, 40, 0),
+  };
+}
+
+function normalizeCodexPets(codexPets) {
+  const safeCodexPets = codexPets && typeof codexPets === 'object' ? codexPets : {};
+  const seenIds = new Set();
+  const items = Array.isArray(safeCodexPets.items)
+    ? safeCodexPets.items
+      .map(normalizeCodexPetItem)
+      .filter(Boolean)
+      .filter((item) => {
+        if (seenIds.has(item.id)) return false;
+        seenIds.add(item.id);
+        return true;
+      })
+      .slice(0, 50)
+    : [];
+  const activeId = typeof safeCodexPets.activeId === 'string' && seenIds.has(safeCodexPets.activeId)
+    ? safeCodexPets.activeId
+    : null;
+
+  return {
+    activeId,
+    items,
+  };
+}
+
+function normalizeCodexPetItem(item) {
+  if (!item || typeof item !== 'object') return null;
+  if (typeof item.id !== 'string' || !item.id.trim()) return null;
+  if (typeof item.petJsonPath !== 'string' || !item.petJsonPath.trim()) return null;
+  if (typeof item.spritesheetPath !== 'string' || !item.spritesheetPath.trim()) return null;
+
+  const id = item.id.trim().slice(0, 100);
+  const displayName = String(item.displayName || id).trim().slice(0, 80) || id;
+  const description = String(item.description || '').trim().slice(0, 240);
+
+  return {
+    id,
+    displayName,
+    description,
+    petJsonPath: item.petJsonPath,
+    spritesheetPath: item.spritesheetPath,
+    importedAt: typeof item.importedAt === 'string' ? item.importedAt : new Date(0).toISOString(),
   };
 }
 

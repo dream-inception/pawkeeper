@@ -238,8 +238,10 @@
         </div>
         <div class="field">
           <label for="taskTitle">Task</label>
-          <input type="text" id="taskTitle" maxlength="120" placeholder="Water the plants" list="taskTemplateList" autocomplete="off">
-          <datalist id="taskTemplateList"></datalist>
+          <div class="suggestion-field">
+            <input type="text" id="taskTitle" maxlength="120" placeholder="Water the plants" autocomplete="off" aria-autocomplete="list" aria-controls="taskTemplateList" aria-expanded="false">
+            <div id="taskTemplateList" class="suggestion-list" role="listbox" hidden></div>
+          </div>
           <p class="field-hint" id="taskTemplateHint">Choose a common task or type your own.</p>
         </div>
         <div class="field">
@@ -265,42 +267,103 @@
         <div class="cat-preview" id="catPreview" aria-live="polite">
           <div class="cat-preview-stage" id="catPreviewStage">
             <img id="catPreviewImage" src="../../assets/break-neko-icon128.png" alt="Cat preview">
+            <canvas id="catPreviewCanvas" width="192" height="208" hidden aria-label="Codex pet preview"></canvas>
             <video id="catPreviewVideo" muted loop preload="metadata"></video>
           </div>
           <span id="catPreviewLabel">Default cat</span>
         </div>
-        <label class="check-row">
-          <input type="checkbox" id="petEnabled">
-          <span>Show desktop pet</span>
-        </label>
-        <p class="field-hint" id="petHelpText">Shows a draggable cat. Double-click it to summon a break.</p>
-        <div class="field-grid">
-          <button type="button" id="chooseCatBtn" class="secondary">Choose My Cat</button>
-          <button type="button" id="clearCatBtn" class="secondary">Use Default</button>
-        </div>
-        <div class="field">
-          <label for="catSizeMode">Overlay size</label>
-          <select id="catSizeMode">
-            <option value="screen" data-i18n-option="catSizeScreen">Full screen</option>
-            <option value="half" data-i18n-option="catSizeHalf">1/2 screen</option>
-            <option value="quarter" data-i18n-option="catSizeQuarter">1/4 screen</option>
-            <option value="custom" data-i18n-option="catSizeCustom">Custom</option>
-          </select>
-        </div>
-        <div class="field" id="catCustomSizeField">
-          <label for="catCustomSize">Custom size (% of screen)</label>
-          <input type="range" id="catCustomSize" min="20" max="100" step="5" value="50">
-          <output id="catCustomSizeValue" for="catCustomSize">50%</output>
-        </div>
-        <div class="field-grid">
+
+        <div class="cat-section">
+          <h4 id="desktopPetSectionTitle">Desktop pet</h4>
+          <label class="check-row">
+            <input type="checkbox" id="petEnabled">
+            <span>Show desktop pet</span>
+          </label>
+          <p class="field-hint" id="petHelpText">Shows a draggable cat. Double-click it to summon a break.</p>
           <div class="field">
-            <label for="catOffsetX">Horizontal offset</label>
-            <input type="number" id="catOffsetX" min="-40" max="40" value="0">
+            <label for="petSize">Desktop pet size</label>
+            <input type="range" id="petSize" min="80" max="220" step="10" value="120">
+            <output id="petSizeValue" for="petSize">120px</output>
+          </div>
+          <label class="check-row">
+            <input type="checkbox" id="petInteractionEnabled">
+            <span>Enable mouse interaction</span>
+          </label>
+          <div class="field">
+            <label for="petInteractionMode">Interaction mode</label>
+            <select id="petInteractionMode">
+              <option value="quiet">Quiet</option>
+              <option value="playful">Playful</option>
+              <option value="follow">Follow</option>
+            </select>
+            <p class="field-hint" id="petInteractionModeHint">Quiet looks at the cursor. Playful dodges. Follow slowly approaches.</p>
+          </div>
+          <label class="check-row">
+            <input type="checkbox" id="petReducedMotion">
+            <span>Reduce pet motion</span>
+          </label>
+          <button type="button" id="testPetInteractionBtn" class="secondary">Test Pet Interaction</button>
+        </div>
+
+        <div class="cat-section">
+          <h4 id="codexLibrarySectionTitle">Codex pet library</h4>
+          <button type="button" id="importCodexPetBtn" class="secondary">Import Codex Pet</button>
+          <p class="field-hint" id="codexPetStatus">No Codex pets imported yet.</p>
+          <div class="codex-pet-list" id="codexPetList"></div>
+        </div>
+
+        <div class="cat-section">
+          <h4 id="overlayCatSectionTitle">Break overlay cat</h4>
+          <div class="field-grid">
+            <button type="button" id="chooseCatBtn" class="secondary">Choose My Cat</button>
+            <button type="button" id="clearCatBtn" class="secondary">Use Default</button>
+          </div>
+          <div class="field">
+            <label for="catSizeMode">Overlay size</label>
+            <select id="catSizeMode">
+              <option value="screen" data-i18n-option="catSizeScreen">Full screen</option>
+              <option value="half" data-i18n-option="catSizeHalf">1/2 screen</option>
+              <option value="quarter" data-i18n-option="catSizeQuarter">1/4 screen</option>
+              <option value="custom" data-i18n-option="catSizeCustom">Custom</option>
+            </select>
+          </div>
+          <div class="field" id="catCustomSizeField">
+            <label for="catCustomSize">Custom size (% of screen)</label>
+            <input type="range" id="catCustomSize" min="20" max="100" step="5" value="50">
+            <output id="catCustomSizeValue" for="catCustomSize">50%</output>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="catOffsetX">Horizontal offset</label>
+              <input type="number" id="catOffsetX" min="-40" max="40" value="0">
+            </div>
+          </div>
+          <div class="field">
+            <label for="catOffsetY">Vertical offset</label>
+            <input type="number" id="catOffsetY" min="-40" max="40" value="0">
           </div>
         </div>
-        <div class="field">
-          <label for="catOffsetY">Vertical offset</label>
-          <input type="number" id="catOffsetY" min="-40" max="40" value="0">
+
+        <div class="cat-section">
+          <h4 id="agentControlSectionTitle">Agent control</h4>
+          <label class="check-row">
+            <input type="checkbox" id="petMcpEnabled">
+            <span>Enable MCP control</span>
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="petMcpLanEnabled">
+            <span>Allow LAN access via mDNS</span>
+          </label>
+          <div class="field">
+            <label for="petMcpLocalDomain">Local domain</label>
+            <input type="text" id="petMcpLocalDomain" placeholder="neko.local">
+          </div>
+          <div class="mcp-status" id="petMcpStatus">MCP server not started.</div>
+          <div class="field-grid">
+            <button type="button" id="copyMcpConfigBtn" class="secondary">Copy Cursor Config</button>
+            <button type="button" id="copyMcpTokenBtn" class="secondary">Copy Token</button>
+          </div>
+          <button type="button" id="rotateMcpTokenBtn" class="secondary">Regenerate Token</button>
         </div>
       </section>
 

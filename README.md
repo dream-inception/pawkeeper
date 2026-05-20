@@ -13,6 +13,8 @@ keeps that work available for reference.
 - Three reminder styles: system notification, transparent cat overlay, and
   fullscreen cat break.
 - Custom cat image or video support.
+- Codex pet import with an animated desktop pet library.
+- Optional local MCP/HTTP pet control for Cursor, hooks, and LAN devices.
 - Menu bar controls for starting, pausing, summoning the cat, and quiet time.
 - Local settings storage. Custom cat media stays on your device.
 
@@ -61,6 +63,9 @@ npm run build:mac
 
 For a deeper map of the runtime modules, window responsibilities, data flow, and
 maintenance notes, see [docs/architecture.md](docs/architecture.md).
+
+For pet MCP setup, Cursor config, LAN/mDNS mode, and hook examples, see
+[docs/pet-mcp.md](docs/pet-mcp.md).
 
 ## Contact
 

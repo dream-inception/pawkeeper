@@ -16,7 +16,27 @@ contextBridge.exposeInMainWorld('breakNeko', {
   completeTask: (taskId) => ipcRenderer.invoke('task:complete', taskId),
   chooseCustomCat: () => ipcRenderer.invoke('cat:choose'),
   clearCustomCat: () => ipcRenderer.invoke('cat:clear'),
+  importCodexPet: () => ipcRenderer.invoke('codex-pet:import'),
+  selectCodexPet: (petId) => ipcRenderer.invoke('codex-pet:select', petId),
+  deleteCodexPet: (petId) => ipcRenderer.invoke('codex-pet:delete', petId),
+  beginPetDrag: () => ipcRenderer.invoke('pet:drag-start'),
+  movePetBy: (delta) => ipcRenderer.invoke('pet:drag-move', delta),
+  finishPetDrag: () => ipcRenderer.invoke('pet:drag-end'),
+  getPetRuntimeState: () => ipcRenderer.invoke('pet:get-runtime-state'),
+  getPetMcpStatus: () => ipcRenderer.invoke('pet:get-mcp-status'),
+  rotatePetMcpToken: () => ipcRenderer.invoke('pet:rotate-mcp-token'),
+  testPetInteraction: () => ipcRenderer.invoke('pet:test-interaction'),
   completeOnboarding: () => ipcRenderer.invoke('onboarding:complete'),
+  onPetControl: (callback) => {
+    const listener = (_event, state) => callback(state);
+    ipcRenderer.on('pet:control', listener);
+    return () => ipcRenderer.removeListener('pet:control', listener);
+  },
+  onPetCursor: (callback) => {
+    const listener = (_event, cursor) => callback(cursor);
+    ipcRenderer.on('pet:cursor', listener);
+    return () => ipcRenderer.removeListener('pet:cursor', listener);
+  },
   onTimerState: (callback) => {
     const listener = (_event, state) => callback(state);
     ipcRenderer.on('timer:state', listener);

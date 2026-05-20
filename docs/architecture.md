@@ -19,7 +19,14 @@ kept explicit.
 - `src/main/menu.js` owns the app menu and tray menu.
 - `src/main/pet-window.js` owns the optional draggable desktop pet.
 - `src/main/custom-cat.js` owns custom cat media import into Electron user data.
+- `src/main/codex-pet.js` owns Codex pet package import, validation, and library
+  updates for desktop pet spritesheets.
+- `src/main/pet-runtime.js` owns desktop pet animation state priority and TTL.
+- `src/main/pet-mcp-server.js` owns the optional MCP server that exposes pet
+  control tools over loopback HTTP and, when enabled, LAN/mDNS.
 - `src/main/ipc.js` registers the stable `window.breakNeko` IPC contract.
+- `docs/pet-mcp.md` documents how to connect Cursor and other local agents to the
+  pet MCP/HTTP control server.
 - `src/main/automation-tests.js` owns Electron smoke/visual test entrypoints.
 - `src/shared.js` contains shared settings helpers and legacy settings
   migration utilities.

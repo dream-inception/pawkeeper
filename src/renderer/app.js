@@ -34,9 +34,24 @@ const taskTimeError = document.getElementById('taskTimeError');
 const taskList = document.getElementById('taskList');
 const catPreview = document.getElementById('catPreview');
 const catPreviewImage = document.getElementById('catPreviewImage');
+const catPreviewCanvas = document.getElementById('catPreviewCanvas');
 const catPreviewVideo = document.getElementById('catPreviewVideo');
 const catPreviewLabel = document.getElementById('catPreviewLabel');
+const codexPetList = document.getElementById('codexPetList');
+const codexPetStatus = document.getElementById('codexPetStatus');
 const petEnabledInput = document.getElementById('petEnabled');
+const petSizeInput = document.getElementById('petSize');
+const petSizeValue = document.getElementById('petSizeValue');
+const petInteractionEnabledInput = document.getElementById('petInteractionEnabled');
+const petInteractionModeInput = document.getElementById('petInteractionMode');
+const petReducedMotionInput = document.getElementById('petReducedMotion');
+const petMcpEnabledInput = document.getElementById('petMcpEnabled');
+const petMcpLanEnabledInput = document.getElementById('petMcpLanEnabled');
+const petMcpLocalDomainInput = document.getElementById('petMcpLocalDomain');
+const petMcpStatus = document.getElementById('petMcpStatus');
+const copyMcpConfigBtn = document.getElementById('copyMcpConfigBtn');
+const copyMcpTokenBtn = document.getElementById('copyMcpTokenBtn');
+const rotateMcpTokenBtn = document.getElementById('rotateMcpTokenBtn');
 const catSizeModeInput = document.getElementById('catSizeMode');
 const catCustomSizeField = document.getElementById('catCustomSizeField');
 const catCustomSizeInput = document.getElementById('catCustomSize');
@@ -53,6 +68,9 @@ const durationPresetButtons = Array.from(document.querySelectorAll('[data-durati
 let currentSettings;
 let currentTimerState;
 let currentAppInfo;
+let catPreviewPlayer = null;
+let activeTaskTemplateIndex = -1;
+let currentMcpStatus = null;
 
 const TASK_TEMPLATES = [
   { key: 'drinkWater', offsetMinutes: 15 },
@@ -105,7 +123,45 @@ const I18N = {
     usingCat: (name) => `Using ${name}`,
     catPreviewAlt: 'Cat preview',
     showDesktopPet: 'Show desktop pet',
+    desktopPet: 'Desktop pet',
+    codexLibrary: 'Codex pet library',
+    overlayCat: 'Break overlay cat',
+    agentControl: 'Agent control',
     desktopPetHelp: 'Shows a draggable cat. Double-click it to summon a break.',
+    desktopPetSize: 'Desktop pet size',
+    enablePetInteraction: 'Enable mouse interaction',
+    petInteractionMode: 'Interaction mode',
+    petInteractionModeHint: 'Quiet looks at the cursor. Playful dodges. Follow slowly approaches.',
+    petModeQuiet: 'Quiet',
+    petModePlayful: 'Playful',
+    petModeFollow: 'Follow',
+    reducePetMotion: 'Reduce pet motion',
+    enableMcpControl: 'Enable MCP control',
+    enableMcpLan: 'Allow LAN access via mDNS',
+    mcpLocalDomain: 'Local domain',
+    testPetInteraction: 'Test Pet Interaction',
+    mcpRunning: (url) => `MCP server running: ${url}`,
+    mcpStopped: 'MCP server is off.',
+    mcpError: (message) => `MCP server error: ${message}`,
+    mcpUsageHint: (path) => `Cursor: paste this into ${path}, then restart Cursor.`,
+    mcpHttpHint: 'Simple HTTP control for hooks:',
+    mcpLanHint: (urls) => `LAN URLs: ${urls.join(', ')}`,
+    mcpMdnsHint: (name, type) => `mDNS: ${name} (${type})`,
+    copyMcpConfig: 'Copy Cursor Config',
+    copyMcpToken: 'Copy Token',
+    rotateMcpToken: 'Regenerate Token',
+    copied: 'Copied',
+    petTestNeedsEnabled: 'Turn on desktop pet first.',
+    importCodexPet: 'Import Codex Pet',
+    codexPetEmpty: 'No Codex pets imported yet. Choose a pet.json to add one.',
+    codexPetImported: (count) => `${count} Codex pet${count === 1 ? '' : 's'} imported`,
+    codexPetActive: 'Using',
+    codexPetUse: 'Use',
+    codexPetDelete: 'Delete',
+    codexPetDeleteConfirm: (name) => `Delete ${name} from the pet library?`,
+    codexPetImportFailed: (message) => `Import failed: ${message}`,
+    codexPetImportedHint: (name) => `Imported ${name}. Turn on desktop pet to see it on your screen.`,
+    usingCodexPet: (name) => `Using Codex pet: ${name}`,
     catSize: 'Overlay size',
     catSizeScreen: 'Full screen',
     catSizeHalf: '1/2 screen',
@@ -201,7 +257,45 @@ const I18N = {
     usingCat: (name) => `正在使用 ${name}`,
     catPreviewAlt: '小猫预览',
     showDesktopPet: '显示桌面小猫',
+    desktopPet: '桌面宠物',
+    codexLibrary: 'Codex 宠物库',
+    overlayCat: '休息页小猫',
+    agentControl: 'Agent 控制',
     desktopPetHelp: '显示一只可拖动的小猫，双击可召唤休息。',
+    desktopPetSize: '桌面宠物尺寸',
+    enablePetInteraction: '启用鼠标互动',
+    petInteractionMode: '互动模式',
+    petInteractionModeHint: '安静：只看鼠标。活泼：靠近会躲开。跟随：缓慢靠近鼠标。',
+    petModeQuiet: '安静',
+    petModePlayful: '活泼',
+    petModeFollow: '跟随',
+    reducePetMotion: '减少宠物动画',
+    enableMcpControl: '启用 MCP 控制',
+    enableMcpLan: '允许局域网通过 mDNS 访问',
+    mcpLocalDomain: '本地域名',
+    testPetInteraction: '测试宠物互动',
+    mcpRunning: (url) => `MCP 服务运行中：${url}`,
+    mcpStopped: 'MCP 服务未开启。',
+    mcpError: (message) => `MCP 服务错误：${message}`,
+    mcpUsageHint: (path) => `Cursor：把下面配置放到 ${path}，然后重启 Cursor。`,
+    mcpHttpHint: '给 hooks 使用的简单 HTTP 控制：',
+    mcpLanHint: (urls) => `局域网 URL：${urls.join(', ')}`,
+    mcpMdnsHint: (name, type) => `mDNS：${name}（${type}）`,
+    copyMcpConfig: '复制 Cursor 配置',
+    copyMcpToken: '复制 Token',
+    rotateMcpToken: '重新生成 Token',
+    copied: '已复制',
+    petTestNeedsEnabled: '请先打开显示桌面小猫。',
+    importCodexPet: '导入 Codex 宠物',
+    codexPetEmpty: '还没有导入 Codex 宠物。选择 pet.json 即可添加。',
+    codexPetImported: (count) => `已导入 ${count} 只 Codex 宠物`,
+    codexPetActive: '使用中',
+    codexPetUse: '使用',
+    codexPetDelete: '删除',
+    codexPetDeleteConfirm: (name) => `要从宠物库删除 ${name} 吗？`,
+    codexPetImportFailed: (message) => `导入失败：${message}`,
+    codexPetImportedHint: (name) => `已导入 ${name}。打开“显示桌面小猫”即可在桌面看到它。`,
+    usingCodexPet: (name) => `正在使用 Codex 宠物：${name}`,
     catSize: '覆盖层尺寸',
     catSizeScreen: '全屏',
     catSizeHalf: '1/2 屏幕',
@@ -423,6 +517,13 @@ function readSettingsFromForm() {
     pet: {
       ...(currentSettings.pet || {}),
       enabled: petEnabledInput.checked,
+      size: clampInput(petSizeInput, 120),
+      interactionEnabled: petInteractionEnabledInput.checked,
+      interactionMode: petInteractionModeInput.value,
+      reducedMotion: petReducedMotionInput.checked,
+      mcpEnabled: petMcpEnabledInput.checked,
+      mcpLanEnabled: petMcpLanEnabledInput.checked || Boolean(petMcpLocalDomainInput.value.trim()),
+      mcpLocalDomain: petMcpLocalDomainInput.value,
     },
     catDisplay: {
       sizeMode: catSizeModeInput.value,
@@ -453,8 +554,18 @@ function applySettingsToForm(settings) {
   catOffsetXInput.value = settings.customCat?.offsetX || 0;
   catOffsetYInput.value = settings.customCat?.offsetY || 0;
   petEnabledInput.checked = settings.pet?.enabled === true;
+  petSizeInput.value = settings.pet?.size || 120;
+  petSizeValue.textContent = `${petSizeInput.value}px`;
+  petInteractionEnabledInput.checked = settings.pet?.interactionEnabled !== false;
+  petInteractionModeInput.value = settings.pet?.interactionMode || 'quiet';
+  petReducedMotionInput.checked = settings.pet?.reducedMotion === true;
+  petMcpEnabledInput.checked = settings.pet?.mcpEnabled !== false;
+  petMcpLanEnabledInput.checked = settings.pet?.mcpLanEnabled === true;
+  petMcpLocalDomainInput.value = settings.pet?.mcpLocalDomain || '';
   renderTasks();
+  renderCodexPetList();
   renderCatPreview();
+  renderMcpStatus();
   applyTranslations();
   syncAllDurationControls();
   renderEnabledReminderSummary();
@@ -535,10 +646,31 @@ function applyTranslations() {
   setText('#addTaskBtn', t('addTask'));
   setText('#catPanel h3', t('cat'));
   setText('#catPanel .sub-card-title span', t('catHint'));
+  setText('#desktopPetSectionTitle', t('desktopPet'));
+  setText('#codexLibrarySectionTitle', t('codexLibrary'));
+  setText('#overlayCatSectionTitle', t('overlayCat'));
+  setText('#agentControlSectionTitle', t('agentControl'));
   setCheckboxLabel(petEnabledInput, t('showDesktopPet'));
   setText('#petHelpText', t('desktopPetHelp'));
+  setText('label[for="petSize"]', t('desktopPetSize'));
+  setCheckboxLabel(petInteractionEnabledInput, t('enablePetInteraction'));
+  setText('label[for="petInteractionMode"]', t('petInteractionMode'));
+  setText('#petInteractionModeHint', t('petInteractionModeHint'));
+  petInteractionModeInput.options[0].textContent = t('petModeQuiet');
+  petInteractionModeInput.options[1].textContent = t('petModePlayful');
+  petInteractionModeInput.options[2].textContent = t('petModeFollow');
+  setCheckboxLabel(petReducedMotionInput, t('reducePetMotion'));
+  setCheckboxLabel(petMcpEnabledInput, t('enableMcpControl'));
+  setCheckboxLabel(petMcpLanEnabledInput, t('enableMcpLan'));
+  setText('label[for="petMcpLocalDomain"]', t('mcpLocalDomain'));
+  setText('#testPetInteractionBtn', t('testPetInteraction'));
+  setText('#copyMcpConfigBtn', t('copyMcpConfig'));
+  setText('#copyMcpTokenBtn', t('copyMcpToken'));
+  setText('#rotateMcpTokenBtn', t('rotateMcpToken'));
   setText('#chooseCatBtn', t('chooseCat'));
+  setText('#importCodexPetBtn', t('importCodexPet'));
   setText('#clearCatBtn', t('useDefault'));
+  renderCodexPetList();
   setText('label[for="catSizeMode"]', t('catSize'));
   setText('label[for="catCustomSize"]', t('catCustomSize'));
   document.querySelectorAll('#catSizeMode [data-i18n-option]').forEach((option) => {
@@ -608,11 +740,19 @@ function renderTaskTemplateOptions() {
 
   taskTemplateList.innerHTML = '';
   TASK_TEMPLATES.forEach((template) => {
-    const option = document.createElement('option');
-    option.value = taskTemplateLabel(template);
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'suggestion-option';
+    option.role = 'option';
     option.dataset.templateKey = template.key;
+    option.textContent = taskTemplateLabel(template);
+    option.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+      selectTaskTemplate(template);
+    });
     taskTemplateList.appendChild(option);
   });
+  updateTaskTemplateSuggestions();
 }
 
 function applySelectedTaskTemplate() {
@@ -625,6 +765,51 @@ function applySelectedTaskTemplate() {
     new Date(Date.now() + selectedTemplate.offsetMinutes * 60 * 1000)
   );
   taskTimeError.textContent = '';
+}
+
+function selectTaskTemplate(template) {
+  taskTitleInput.value = taskTemplateLabel(template);
+  applySelectedTaskTemplate();
+  hideTaskTemplateSuggestions();
+}
+
+function getVisibleTaskTemplates() {
+  const query = taskTitleInput.value.trim().toLowerCase();
+  return TASK_TEMPLATES.filter((template) => {
+    const label = taskTemplateLabel(template).toLowerCase();
+    return !query || label.includes(query);
+  });
+}
+
+function updateTaskTemplateSuggestions() {
+  if (!taskTemplateList) return;
+  const visibleTemplates = getVisibleTaskTemplates();
+  const optionButtons = Array.from(taskTemplateList.querySelectorAll('.suggestion-option'));
+  let visibleIndex = 0;
+
+  optionButtons.forEach((button) => {
+    const template = TASK_TEMPLATES.find((item) => item.key === button.dataset.templateKey);
+    const isVisible = Boolean(template && visibleTemplates.includes(template));
+    button.hidden = !isVisible;
+    button.classList.toggle('is-active', isVisible && visibleIndex === activeTaskTemplateIndex);
+    button.setAttribute('aria-selected', String(isVisible && visibleIndex === activeTaskTemplateIndex));
+    if (isVisible) visibleIndex += 1;
+  });
+
+  taskTemplateList.hidden = document.activeElement !== taskTitleInput || visibleTemplates.length === 0;
+  taskTitleInput.setAttribute('aria-expanded', String(!taskTemplateList.hidden));
+}
+
+function showTaskTemplateSuggestions() {
+  activeTaskTemplateIndex = -1;
+  updateTaskTemplateSuggestions();
+}
+
+function hideTaskTemplateSuggestions() {
+  if (!taskTemplateList) return;
+  taskTemplateList.hidden = true;
+  taskTitleInput.setAttribute('aria-expanded', 'false');
+  activeTaskTemplateIndex = -1;
 }
 
 function syncDurationControl(control) {
@@ -823,12 +1008,245 @@ function renderTasks() {
   }
 }
 
+function getActiveCodexPet(settings = currentSettings) {
+  const activeId = settings?.codexPets?.activeId;
+  return settings?.codexPets?.items?.find((item) => item.id === activeId) || null;
+}
+
+function renderCodexPetList() {
+  if (!codexPetList || !codexPetStatus) return;
+
+  const items = currentSettings?.codexPets?.items || [];
+  const activeId = currentSettings?.codexPets?.activeId || null;
+  codexPetStatus.textContent = items.length > 0
+    ? t('codexPetImported', items.length)
+    : t('codexPetEmpty');
+  codexPetList.innerHTML = '';
+
+  items.forEach((pet) => {
+    const item = document.createElement('div');
+    item.className = `codex-pet-item${pet.id === activeId ? ' is-active' : ''}`;
+
+    const thumbnail = document.createElement('canvas');
+    thumbnail.className = 'codex-pet-thumb';
+    thumbnail.width = 48;
+    thumbnail.height = 52;
+    renderPetThumbnail(thumbnail, pet.spritesheetPath);
+
+    const copy = document.createElement('div');
+    copy.className = 'codex-pet-copy';
+
+    const name = document.createElement('strong');
+    name.textContent = pet.displayName || pet.id;
+    copy.appendChild(name);
+
+    const description = document.createElement('span');
+    description.textContent = pet.description || pet.id;
+    copy.appendChild(description);
+
+    const actions = document.createElement('div');
+    actions.className = 'codex-pet-actions';
+
+    const selectButton = document.createElement('button');
+    selectButton.type = 'button';
+    selectButton.className = 'secondary';
+    selectButton.textContent = pet.id === activeId ? t('codexPetActive') : t('codexPetUse');
+    selectButton.disabled = pet.id === activeId;
+    selectButton.addEventListener('click', async () => {
+      applySettingsToForm(await api.selectCodexPet(pet.id));
+    });
+    actions.appendChild(selectButton);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'secondary codex-pet-delete';
+    deleteButton.textContent = t('codexPetDelete');
+    deleteButton.addEventListener('click', async () => {
+      if (!window.confirm(t('codexPetDeleteConfirm', pet.displayName || pet.id))) return;
+      applySettingsToForm(await api.deleteCodexPet(pet.id));
+    });
+    actions.appendChild(deleteButton);
+
+    item.append(thumbnail, copy, actions);
+    codexPetList.appendChild(item);
+  });
+}
+
+function renderPetThumbnail(canvas, spritesheetPath) {
+  const context = canvas.getContext('2d');
+  if (!context || !spritesheetPath) return;
+  const image = new Image();
+  image.onload = () => {
+    const cellWidth = Math.floor(image.naturalWidth / 8);
+    const cellHeight = Math.floor(image.naturalHeight / 9);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, cellWidth, cellHeight, 0, 0, canvas.width, canvas.height);
+  };
+  image.src = toPreviewFileUrl(spritesheetPath);
+}
+
+async function renderMcpStatus() {
+  if (!petMcpStatus || !api.getPetMcpStatus) return;
+  try {
+    const status = await api.getPetMcpStatus();
+    currentMcpStatus = status;
+    petMcpStatus.textContent = status.error
+      ? t('mcpError', status.error)
+      : status.running && status.url
+        ? [
+          t('mcpRunning', status.stateUrl?.replace('/state', '/mcp') || status.url),
+          status.localDomainUrl ? t('mcpLanHint', [status.localDomainUrl]) : '',
+          status.mdnsService ? t('mcpMdnsHint', status.mdnsService.name, status.mdnsService.type) : '',
+          status.lanUrls?.length ? `IP fallback: ${status.lanUrls.join(', ')}` : '',
+          t('mcpUsageHint', status.cursorGlobalPath || '~/.cursor/mcp.json'),
+          status.localCursorConfigSnippet || status.cursorConfigSnippet || status.configSnippet,
+          '',
+          t('mcpHttpHint'),
+          status.curlSetStateExample,
+        ].filter(Boolean).join('\n')
+        : t('mcpStopped');
+  } catch (error) {
+    petMcpStatus.textContent = t('mcpError', error.message || String(error));
+  }
+}
+
+function stopCatPreviewPlayer() {
+  catPreviewPlayer?.stop();
+  catPreviewPlayer = null;
+}
+
+function startCatPreviewPlayer(spritesheet) {
+  if (catPreviewPlayer?.spritesheet === spritesheet) return;
+
+  stopCatPreviewPlayer();
+  const context = catPreviewCanvas.getContext('2d');
+  if (!context) return;
+
+  const image = new Image();
+  const columns = 8;
+  const rows = 9;
+  const playbackScale = 1.8;
+  let cellWidth = 192;
+  let cellHeight = 208;
+  let idleDurations = [280, 110, 110, 140, 140, 320];
+  let frameIndex = 0;
+  let lastFrameAt = 0;
+  let animationFrameId = 0;
+  let stopped = false;
+
+  function draw(timestamp = performance.now()) {
+    if (stopped) return;
+    const duration = idleDurations[frameIndex] || 150;
+    if (!lastFrameAt) {
+      lastFrameAt = timestamp;
+    } else if (timestamp - lastFrameAt >= duration) {
+      frameIndex = (frameIndex + 1) % idleDurations.length;
+      lastFrameAt = timestamp;
+    }
+    context.clearRect(0, 0, cellWidth, cellHeight);
+    context.drawImage(
+      image,
+      frameIndex * cellWidth,
+      0,
+      cellWidth,
+      cellHeight,
+      0,
+      0,
+      cellWidth,
+      cellHeight
+    );
+    animationFrameId = requestAnimationFrame(draw);
+  }
+
+  image.onload = () => {
+    if (stopped) return;
+    cellWidth = Math.floor(image.naturalWidth / columns);
+    cellHeight = Math.floor(image.naturalHeight / rows);
+    catPreviewCanvas.width = cellWidth;
+    catPreviewCanvas.height = cellHeight;
+    idleDurations = scaleDurations(
+      getDurationsForCount(idleDurations, detectNonEmptyFrameCount(image, 0, {
+        columns,
+        cellWidth,
+        cellHeight,
+      })),
+      playbackScale
+    );
+    draw();
+  };
+  image.onerror = () => {
+    if (!stopped) {
+      catPreviewCanvas.hidden = true;
+      catPreviewImage.hidden = false;
+      catPreviewImage.src = '../../assets/break-neko-icon128.png';
+    }
+  };
+  image.src = toPreviewFileUrl(spritesheet);
+  catPreviewPlayer = {
+    spritesheet,
+    stop() {
+      stopped = true;
+      cancelAnimationFrame(animationFrameId);
+    },
+  };
+}
+
+function detectNonEmptyFrameCount(image, row, geometry) {
+  const scratch = document.createElement('canvas');
+  scratch.width = geometry.cellWidth;
+  scratch.height = geometry.cellHeight;
+  const scratchContext = scratch.getContext('2d', { willReadFrequently: true });
+  if (!scratchContext) return 6;
+
+  let count = 0;
+  for (let column = 0; column < geometry.columns; column += 1) {
+    scratchContext.clearRect(0, 0, geometry.cellWidth, geometry.cellHeight);
+    scratchContext.drawImage(
+      image,
+      column * geometry.cellWidth,
+      row * geometry.cellHeight,
+      geometry.cellWidth,
+      geometry.cellHeight,
+      0,
+      0,
+      geometry.cellWidth,
+      geometry.cellHeight
+    );
+    if (!hasVisiblePixels(scratchContext, geometry.cellWidth, geometry.cellHeight)) break;
+    count += 1;
+  }
+  return Math.max(1, count || 6);
+}
+
+function hasVisiblePixels(context, width, height) {
+  const { data } = context.getImageData(0, 0, width, height);
+  for (let index = 3; index < data.length; index += 16) {
+    if (data[index] > 8) return true;
+  }
+  return false;
+}
+
+function getDurationsForCount(baseDurations, count) {
+  const durations = baseDurations.slice(0, count);
+  while (durations.length < count) {
+    durations.push(baseDurations[baseDurations.length - 1] || 150);
+  }
+  return durations;
+}
+
+function scaleDurations(durations, scale) {
+  return durations.map((duration) => Math.round(duration * scale));
+}
+
 function renderCatPreview() {
+  const activeCodexPet = getActiveCodexPet();
   const customCat = currentSettings?.customCat;
-  const offsetX = shared.clampNumber(catOffsetXInput.value, -40, 40, 0);
-  const offsetY = shared.clampNumber(catOffsetYInput.value, -40, 40, 0);
+  const offsetX = activeCodexPet ? 0 : shared.clampNumber(catOffsetXInput.value, -40, 40, 0);
+  const offsetY = activeCodexPet ? 0 : shared.clampNumber(catOffsetYInput.value, -40, 40, 0);
   const customSize = shared.clampNumber(catCustomSizeInput.value, 20, 100, 50);
-  const sizeScale = catSizeModeInput.value === 'screen'
+  const sizeScale = activeCodexPet
+    ? 0.92
+    : catSizeModeInput.value === 'screen'
     ? 1.15
     : catSizeModeInput.value === 'quarter'
       ? 0.62
@@ -836,14 +1254,30 @@ function renderCatPreview() {
         ? customSize / 55
         : 0.86;
 
-  catPreviewLabel.textContent = customCat
-    ? t('usingCat', customCat.name)
-    : t('defaultCat');
+  catPreviewLabel.textContent = activeCodexPet
+    ? t('usingCodexPet', activeCodexPet.displayName || activeCodexPet.id)
+    : customCat
+      ? t('usingCat', customCat.name)
+      : t('defaultCat');
   catPreviewImage.alt = t('catPreviewAlt');
 
   const transform = `translate(${offsetX * 0.28}px, ${offsetY * 0.28}px) scale(${sizeScale.toFixed(2)})`;
   catPreviewImage.style.transform = transform;
   catPreviewVideo.style.transform = transform;
+  catPreviewCanvas.style.transform = transform;
+
+  if (activeCodexPet) {
+    catPreviewVideo.pause();
+    catPreviewVideo.removeAttribute('src');
+    catPreviewVideo.hidden = true;
+    catPreviewImage.hidden = true;
+    catPreviewCanvas.hidden = false;
+    startCatPreviewPlayer(activeCodexPet.spritesheetPath);
+    return;
+  }
+
+  stopCatPreviewPlayer();
+  catPreviewCanvas.hidden = true;
 
   if (!customCat) {
     catPreviewVideo.pause();
@@ -883,6 +1317,7 @@ async function saveSettings({ showMessage = true } = {}) {
   const settings = readSettingsFromForm();
   const normalizedSettings = await api.saveSettings(settings);
   applySettingsToForm(normalizedSettings);
+  setTimeout(renderMcpStatus, 500);
   currentTimerState = await api.getTimerState();
   renderTimerState(currentTimerState);
 
@@ -1021,8 +1456,41 @@ quickTaskTimeButtons.forEach((button) => {
   });
 });
 
-taskTitleInput.addEventListener('input', applySelectedTaskTemplate);
+taskTitleInput.addEventListener('focus', showTaskTemplateSuggestions);
+taskTitleInput.addEventListener('input', () => {
+  activeTaskTemplateIndex = -1;
+  updateTaskTemplateSuggestions();
+  applySelectedTaskTemplate();
+});
 taskTitleInput.addEventListener('change', applySelectedTaskTemplate);
+taskTitleInput.addEventListener('keydown', (event) => {
+  const visibleTemplates = getVisibleTaskTemplates();
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    activeTaskTemplateIndex = Math.min(activeTaskTemplateIndex + 1, visibleTemplates.length - 1);
+    updateTaskTemplateSuggestions();
+    return;
+  }
+  if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    activeTaskTemplateIndex = Math.max(activeTaskTemplateIndex - 1, 0);
+    updateTaskTemplateSuggestions();
+    return;
+  }
+  if (event.key === 'Enter' && activeTaskTemplateIndex >= 0 && visibleTemplates[activeTaskTemplateIndex]) {
+    event.preventDefault();
+    selectTaskTemplate(visibleTemplates[activeTaskTemplateIndex]);
+    return;
+  }
+  if (event.key === 'Escape') {
+    hideTaskTemplateSuggestions();
+  }
+});
+document.addEventListener('mousedown', (event) => {
+  if (!event.target.closest?.('.suggestion-field')) {
+    hideTaskTemplateSuggestions();
+  }
+});
 
 durationControls.forEach((control) => {
   control.querySelectorAll('[data-duration-step]').forEach((button) => {
@@ -1105,8 +1573,62 @@ catCustomSizeInput.addEventListener('input', () => {
   scheduleAutoSave();
 });
 
+petSizeInput.addEventListener('input', () => {
+  petSizeValue.textContent = `${petSizeInput.value}px`;
+  scheduleAutoSave();
+});
+
 document.getElementById('chooseCatBtn').addEventListener('click', async () => {
   applySettingsToForm(await api.chooseCustomCat());
+});
+
+document.getElementById('importCodexPetBtn').addEventListener('click', async () => {
+  try {
+    const nextSettings = await api.importCodexPet();
+    applySettingsToForm(nextSettings);
+    const activePet = getActiveCodexPet(nextSettings);
+    if (activePet && codexPetStatus) {
+      codexPetStatus.textContent = t('codexPetImportedHint', activePet.displayName || activePet.id);
+    }
+  } catch (error) {
+    if (codexPetStatus) {
+      codexPetStatus.textContent = t('codexPetImportFailed', error.message || String(error));
+    }
+  }
+});
+
+document.getElementById('testPetInteractionBtn').addEventListener('click', async () => {
+  if (!currentSettings?.pet?.enabled) {
+    codexPetStatus.textContent = t('petTestNeedsEnabled');
+    return;
+  }
+  await api.testPetInteraction?.();
+});
+
+async function copyText(value, button) {
+  if (!value) return;
+  await navigator.clipboard.writeText(value);
+  const originalText = button.textContent;
+  button.textContent = t('copied');
+  setTimeout(() => {
+    button.textContent = originalText;
+  }, 1200);
+}
+
+copyMcpConfigBtn?.addEventListener('click', () => {
+  copyText(
+    currentMcpStatus?.localCursorConfigSnippet || currentMcpStatus?.cursorConfigSnippet || currentMcpStatus?.configSnippet,
+    copyMcpConfigBtn
+  ).catch(() => {});
+});
+
+copyMcpTokenBtn?.addEventListener('click', () => {
+  copyText(currentMcpStatus?.tokenValue || currentMcpStatus?.token, copyMcpTokenBtn).catch(() => {});
+});
+
+rotateMcpTokenBtn?.addEventListener('click', async () => {
+  currentMcpStatus = await api.rotatePetMcpToken?.();
+  await renderMcpStatus();
 });
 
 document.getElementById('clearCatBtn').addEventListener('click', async () => {
