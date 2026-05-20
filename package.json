@@ -8,7 +8,7 @@
     "start": "npm run dev",
     "check": "node --check src/main/index.js && node --check src/main/automation-tests.js && node --check src/main/break-window.js && node --check src/main/codex-pet.js && node --check src/main/custom-cat.js && node --check src/main/paths.js && node --check src/main/pet-mcp-server.js && node --check src/main/pet-runtime.js && node --check src/main/settings.js && node --check src/main/stats.js && node --check src/main/ipc.js && node --check src/main/menu.js && node --check src/main/pet-window.js && node --check src/main/reminders.js && node --check src/main/timer-service.js && node --check src/preload.js && node --check src/shared.js && node --check src/renderer/app.js && node --check src/break/break.js && node --check src/pet/pet.js",
     "lint": "npm run check",
-    "test": "node --test test/*.test.js",
+    "test": "node --test test",
     "test:visual": "BREAK_NEKO_VISUAL_TEST=1 electron .",
     "build:mac": "electron-builder --mac"
   },
