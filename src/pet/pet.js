@@ -10,6 +10,7 @@ const playbackScale = 1.8;
 let codexPlayer = null;
 let lastTimerState = null;
 let dragState = null;
+let bubbleOverride = null;
 
 const copy = {
   en: {
@@ -47,7 +48,33 @@ function setBubble(text) {
   petBubble.hidden = false;
 }
 
+function setBubbleOverride(text, expiresAt = null) {
+  if (!text) {
+    bubbleOverride = null;
+    return;
+  }
+  bubbleOverride = {
+    text,
+    expiresAt: Number.isFinite(expiresAt) ? expiresAt : null,
+  };
+  setBubble(text);
+}
+
+function getBubbleOverrideText() {
+  if (!bubbleOverride) return '';
+  if (bubbleOverride.expiresAt != null && bubbleOverride.expiresAt <= Date.now()) {
+    bubbleOverride = null;
+    return '';
+  }
+  return bubbleOverride.text;
+}
+
 function refreshBubble(state) {
+  const overrideText = getBubbleOverrideText();
+  if (overrideText) {
+    setBubble(overrideText);
+    return;
+  }
   if (!state?.running) {
     setBubble('');
     return;
@@ -348,8 +375,11 @@ api.onPetControl?.((controlState) => {
       codexPlayer?.play(controlState.state);
     }
     if (controlState.source !== 'mouse' && controlState.message) {
-      setBubble(controlState.message);
+      setBubbleOverride(controlState.message, controlState.expiresAt);
     } else {
+      if (controlState.source !== 'mouse') {
+        setBubbleOverride('');
+      }
       refreshBubble(lastTimerState);
     }
   }

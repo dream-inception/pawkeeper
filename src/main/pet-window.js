@@ -1,5 +1,7 @@
 const { createPetRuntimeController } = require('./pet-runtime');
 
+const PET_BUBBLE_SPACE = 168;
+
 function createPetWindowController({
   BrowserWindow,
   getAssetPath,
@@ -31,7 +33,7 @@ function createPetWindowController({
 
     if (petWindow && !petWindow.isDestroyed()) {
       petWindow.setAlwaysOnTop(settings.pet.alwaysOnTop, 'floating');
-      petWindow.setSize(settings.pet.size, settings.pet.size);
+      petWindow.setSize(getPetWindowWidth(settings.pet.size), settings.pet.size);
       const nextPetKey = getPetContentKey(settings);
       if (nextPetKey !== loadedPetKey) {
         loadPetContent(settings);
@@ -49,7 +51,7 @@ function createPetWindowController({
     const bounds = getPetWindowBounds(settings.pet);
     petWindow = new BrowserWindow({
       ...bounds,
-      width: settings.pet.size,
+      width: getPetWindowWidth(settings.pet.size),
       height: settings.pet.size,
       frame: false,
       resizable: false,
@@ -109,16 +111,17 @@ function createPetWindowController({
   }
 
   function getPetWindowBounds(petSettings) {
+    const bubbleSpace = getPetBubbleSpace(petSettings.size);
     if (petSettings.position) {
       return {
-        x: petSettings.position.x,
+        x: petSettings.position.x - bubbleSpace,
         y: petSettings.position.y,
       };
     }
 
     const { workArea } = screen.getPrimaryDisplay();
     return {
-      x: workArea.x + workArea.width - petSettings.size - 24,
+      x: workArea.x + workArea.width - petSettings.size - bubbleSpace - 24,
       y: workArea.y + workArea.height - petSettings.size - 24,
     };
   }
@@ -136,7 +139,10 @@ function createPetWindowController({
         ...settings,
         pet: {
           ...settings.pet,
-          position: { x, y },
+          position: {
+            x: x + getPetBubbleSpace(settings.pet.size),
+            y,
+          },
         },
       });
     }, 300);
@@ -146,13 +152,14 @@ function createPetWindowController({
     if (!petWindow || petWindow.isDestroyed()) return false;
     const [x, y] = petWindow.getPosition();
     const settings = getSettings();
+    const currentVisualX = x + getPetBubbleSpace(settings.pet.size);
     const nextPosition = clampPetPosition({
-      x: x + Math.round(deltaX || 0),
+      x: currentVisualX + Math.round(deltaX || 0),
       y: y + Math.round(deltaY || 0),
       size: settings.pet.size,
     });
     controlledMoveUntil = Date.now() + 500;
-    petWindow.setPosition(nextPosition.x, nextPosition.y, false);
+    petWindow.setPosition(nextPosition.x - getPetBubbleSpace(settings.pet.size), nextPosition.y, false);
     setPetState('user', Math.sign(deltaX) < 0 ? 'runningLeft' : 'runningRight', {
       durationMs: 500,
     });
@@ -164,10 +171,12 @@ function createPetWindowController({
     const cursor = screen.getCursorScreenPoint();
     const [x, y] = petWindow.getPosition();
     const [width, height] = petWindow.getSize();
+    const settings = getSettings();
+    const bubbleSpace = getPetBubbleSpace(settings.pet.size);
     dragSession = {
       startCursor: cursor,
-      startPosition: { x, y },
-      size: Math.max(width, height),
+      startPosition: { x: x + bubbleSpace, y },
+      size: settings.pet.size || Math.min(width, height),
       dragged: false,
       lastStateAt: 0,
     };
@@ -185,11 +194,12 @@ function createPetWindowController({
     const [x, y] = petWindow.getPosition();
     const settings = getSettings();
     if (wasDragged) {
+      const bubbleSpace = getPetBubbleSpace(settings.pet.size);
       updateSettings({
         ...settings,
         pet: {
           ...settings.pet,
-          position: { x, y },
+          position: { x: x + bubbleSpace, y },
         },
       });
       setPetState('user', 'waving', { durationMs: 900 });
@@ -213,7 +223,8 @@ function createPetWindowController({
       size: dragSession.size,
     });
     controlledMoveUntil = Date.now() + 500;
-    petWindow.setPosition(nextPosition.x, nextPosition.y, false);
+    const settings = getSettings();
+    petWindow.setPosition(nextPosition.x - getPetBubbleSpace(settings.pet.size), nextPosition.y, false);
 
     const now = Date.now();
     if (now - dragSession.lastStateAt > 220) {
@@ -310,15 +321,17 @@ function createPetWindowController({
 
     const cursor = screen.getCursorScreenPoint();
     const [x, y] = petWindow.getPosition();
-    const [width, height] = petWindow.getSize();
-    const centerX = x + width / 2;
-    const centerY = y + height / 2;
+    const size = settings.pet.size;
+    const bubbleSpace = getPetBubbleSpace(size);
+    const visualX = x + bubbleSpace;
+    const centerX = visualX + size / 2;
+    const centerY = y + size / 2;
     const deltaX = cursor.x - centerX;
     const deltaY = cursor.y - centerY;
     const distance = Math.hypot(deltaX, deltaY);
-    const nearDistance = width * (1.1 + settings.pet.mouseReactivity / 180);
+    const nearDistance = size * (1.1 + settings.pet.mouseReactivity / 180);
     const isNear = distance < nearDistance;
-    const isCursorInsidePet = cursor.x >= x && cursor.x <= x + width && cursor.y >= y && cursor.y <= y + height;
+    const isCursorInsidePet = cursor.x >= visualX && cursor.x <= visualX + size && cursor.y >= y && cursor.y <= y + size;
     const direction = deltaX < 0 ? 'left' : 'right';
     const now = Date.now();
     const shouldAvoid = settings.pet.avoidCursor || settings.pet.interactionMode === 'playful';
@@ -341,11 +354,11 @@ function createPetWindowController({
 
     if (shouldAvoid && isNear && distance > 0 && now - lastMouseActionAt > 1400) {
       lastMouseActionAt = now;
-      const step = Math.min(width * 0.9, 28 + Math.round(settings.pet.mouseReactivity / 2));
+      const step = Math.min(size * 0.9, 28 + Math.round(settings.pet.mouseReactivity / 2));
       movePetProgrammatically({
-        x: x - (deltaX / distance) * step,
+        x: visualX - (deltaX / distance) * step,
         y: y - (deltaY / distance) * step,
-        size: width,
+        size,
       });
       setPetState('mouse', direction === 'left' ? 'runningRight' : 'runningLeft', {
         durationMs: 850,
@@ -353,12 +366,12 @@ function createPetWindowController({
       return;
     }
 
-    if (shouldFollow && distance > width * 0.9 && distance < width * 9) {
+    if (shouldFollow && distance > size * 0.9 && distance < size * 9) {
       const step = Math.min(34, Math.max(8, distance * 0.14 + settings.pet.mouseReactivity / 12));
       movePetProgrammatically({
-        x: x + (deltaX / distance) * step,
+        x: visualX + (deltaX / distance) * step,
         y: y + (deltaY / distance) * step,
-        size: width,
+        size,
       });
       setPetState('mouse', direction === 'left' ? 'runningLeft' : 'runningRight', {
         durationMs: 620,
@@ -380,14 +393,16 @@ function createPetWindowController({
     if (!petWindow || petWindow.isDestroyed()) return;
     const nextPosition = clampPetPosition({ x, y, size });
     controlledMoveUntil = Date.now() + 500;
-    petWindow.setPosition(nextPosition.x, nextPosition.y, false);
+    const settings = getSettings();
+    petWindow.setPosition(nextPosition.x - getPetBubbleSpace(settings.pet.size), nextPosition.y, false);
   }
 
   function clampPetPosition({ x, y, size }) {
     const display = screen.getDisplayNearestPoint({ x: Math.round(x), y: Math.round(y) });
     const { workArea } = display;
+    const bubbleSpace = getPetBubbleSpace(size);
     return {
-      x: Math.round(Math.min(Math.max(x, workArea.x), workArea.x + workArea.width - size)),
+      x: Math.round(Math.min(Math.max(x, workArea.x + bubbleSpace), workArea.x + workArea.width - size)),
       y: Math.round(Math.min(Math.max(y, workArea.y), workArea.y + workArea.height - size)),
     };
   }
@@ -410,6 +425,14 @@ function createPetWindowController({
     updateApplicationPetState,
     updatePetWindow,
   };
+}
+
+function getPetBubbleSpace(size) {
+  return Math.min(PET_BUBBLE_SPACE, Math.max(112, Math.round(size * 1.05)));
+}
+
+function getPetWindowWidth(size) {
+  return size + getPetBubbleSpace(size);
 }
 
 module.exports = {

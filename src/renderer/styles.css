@@ -32,6 +32,8 @@ body {
     linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 34%),
     var(--bg);
   color: var(--text);
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 body::before {
