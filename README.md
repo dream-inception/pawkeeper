@@ -21,6 +21,24 @@ that work available for reference.
 - Tray/menu controls for starting, pausing, summoning the cat, and quiet time.
 - Local settings storage. Custom cat media stays on your device.
 
+## Download & Install (macOS, Apple Silicon)
+
+Grab the latest `Pawkeeper-*-arm64.dmg` from the
+[GitHub Releases](../../releases) page, open it, and drag **Pawkeeper** into
+your **Applications** folder.
+
+Because this build is ad-hoc signed (not paid Apple notarization), macOS
+quarantines the download. Run this once in Terminal to allow it, then
+double-click as normal:
+
+```bash
+xattr -cr /Applications/Pawkeeper.app
+```
+
+The full, end-user-friendly instructions (English + 中文) live in
+[docs/release-notes-install.md](docs/release-notes-install.md) and are attached
+to every GitHub Release.
+
 ## Platform Status
 
 - macOS: supported for development and packaging with `npm run build:mac`.
@@ -90,6 +108,27 @@ Before publishing a build:
 - Capture English and Chinese settings screenshots.
 - Confirm the README platform status matches the artifacts being published.
 - Package macOS with `npm run build:mac`.
+
+### Publishing a release
+
+Releases are built and published automatically by
+[`.github/workflows/release.yml`](.github/workflows/release.yml). To cut a
+release:
+
+1. Bump `version` in `package.json` and commit.
+2. Tag the commit and push the tag, for example:
+
+   ```bash
+   git tag v1.1.7
+   git push origin v1.1.7
+   ```
+
+3. The workflow runs checks/tests, builds the arm64 DMG + zip on an Apple
+   Silicon runner, and uploads them to a GitHub Release whose notes include the
+   end-user install steps.
+
+You can also trigger the workflow manually from the Actions tab (it uploads the
+build as an artifact instead of publishing a release).
 
 ## Contact
 
