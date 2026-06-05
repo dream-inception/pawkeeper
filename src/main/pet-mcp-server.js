@@ -9,7 +9,7 @@ const DEFAULT_PORT = 8765;
 const MCP_PATH = '/mcp';
 const STATE_PATH = '/state';
 const HEALTH_PATH = '/health';
-const MDNS_SERVICE_NAME = 'Break Neko Pet';
+const MDNS_SERVICE_NAME = 'Pawkeeper Pet';
 const MDNS_SERVICE_TYPE = 'mcp';
 
 function createPetMcpServerController({
@@ -49,8 +49,8 @@ function createPetMcpServerController({
         import('@modelcontextprotocol/node'),
         import('zod/v4'),
       ]);
-      const token = ensureToken();
-      const mcpServer = new McpServer({ name: 'break-neko-pet', version: '1.0.0' });
+      const token = getTokenValue(settings);
+      const mcpServer = new McpServer({ name: 'pawkeeper-pet', version: '1.0.0' });
       transport = new NodeStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       registerPetTools({ mcpServer, z, petController, getSettings, saveSettings });
       await mcpServer.connect(transport);
@@ -62,12 +62,12 @@ function createPetMcpServerController({
         }
         const url = new URL(req.url, `http://${DEFAULT_HOST}`);
         if (url.pathname === HEALTH_PATH) {
-          sendJson(res, 200, { ok: true, service: 'break-neko-pet', mcp: MCP_PATH, state: STATE_PATH });
+          sendJson(res, 200, { ok: true, service: 'pawkeeper-pet', mcp: MCP_PATH, state: STATE_PATH });
           return;
         }
         if (url.pathname === STATE_PATH) {
           if (!isAuthorized(req, url, token)) {
-            sendJson(res, 401, { error: 'Unauthorized. Use the token from Break Neko settings.' });
+            sendJson(res, 401, { error: 'Unauthorized. Use the token from Pawkeeper settings.' });
             return;
           }
           await handleStateRequest({ req, res, petController });
@@ -78,7 +78,7 @@ function createPetMcpServerController({
           return;
         }
         if (!isAuthorized(req, url, token)) {
-          sendJson(res, 401, { error: 'Unauthorized. Use the token from Break Neko settings.' });
+          sendJson(res, 401, { error: 'Unauthorized. Use the token from Pawkeeper settings.' });
           return;
         }
         await transport.handleRequest(req, res);
@@ -108,7 +108,7 @@ function createPetMcpServerController({
         running: false,
         error: error.message || String(error),
       };
-      logger.warn?.('Failed to start Break Neko MCP server:', error);
+      logger.warn?.('Failed to start Pawkeeper MCP server:', error);
     }
 
     return getStatus();
@@ -147,8 +147,8 @@ function createPetMcpServerController({
   }
 
   function getStatus() {
-    const token = ensureToken();
     const settings = getSettings();
+    const token = getTokenValue(settings);
     const lanUrls = status.port && settings.pet.mcpLanEnabled
       ? getLanAddresses().map((address) => `http://${address}:${status.port}${MCP_PATH}`)
       : [];
@@ -204,10 +204,10 @@ function createPetMcpServerController({
         : '',
       tokenValue: token,
       curlSetStateExample: status.port
-        ? `curl -X POST http://${DEFAULT_HOST}:${status.port}${STATE_PATH} -H "Content-Type: application/json" -H "Authorization: Bearer ${token}" --data '{"state":"waving","playCount":3,"message":"Hi"}'`
+        ? createCurlSetStateExample(`http://${DEFAULT_HOST}:${status.port}${STATE_PATH}`, token)
         : '',
       lanCurlSetStateExample: status.port && getSettings().pet.mcpLanEnabled
-        ? `curl -X POST http://${getConfiguredLocalDomain(getSettings())}:${status.port}${STATE_PATH} -H "Content-Type: application/json" -H "Authorization: Bearer ${token}" --data '{"state":"waving","playCount":3,"message":"Hi"}'`
+        ? createCurlSetStateExample(`http://${getConfiguredLocalDomain(getSettings())}:${status.port}${STATE_PATH}`, token)
         : '',
       tools: [
         'pet_get_state',
@@ -219,7 +219,8 @@ function createPetMcpServerController({
     };
   }
 
-  function ensureToken() {
+  function getTokenValue(settings = getSettings()) {
+    if (!settings.pet.mcpTokenRequired) return '';
     const existingToken = getToken();
     if (existingToken) return existingToken;
     const token = crypto.randomBytes(24).toString('hex');
@@ -230,6 +231,14 @@ function createPetMcpServerController({
   async function rotateToken() {
     const token = crypto.randomBytes(24).toString('hex');
     setToken(token);
+    const settings = getSettings();
+    saveSettings({
+      ...settings,
+      pet: {
+        ...settings.pet,
+        mcpTokenRequired: true,
+      },
+    });
     if (httpServer) {
       await stop();
       await start();
@@ -247,11 +256,11 @@ function createPetMcpServerController({
       protocol: 'tcp',
       host,
       txt: {
-        app: 'break-neko',
+        app: 'pawkeeper',
         mcpPath: MCP_PATH,
         statePath: STATE_PATH,
         healthPath: HEALTH_PATH,
-        auth: 'bearer',
+        auth: token ? 'bearer' : 'none',
       },
     });
   }
@@ -352,10 +361,10 @@ function getConfiguredLocalDomain(settings) {
 }
 
 function getLocalMdnsHostName(hostname = os.hostname()) {
-  const safeHostName = String(hostname || 'break-neko')
+  const safeHostName = String(hostname || 'pawkeeper')
     .replace(/\.local$/i, '')
     .replace(/[^a-zA-Z0-9-]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'break-neko';
+    .replace(/^-+|-+$/g, '') || 'pawkeeper';
   return `${safeHostName}.local`;
 }
 
@@ -367,16 +376,23 @@ function getLanAddresses() {
 }
 
 function createMcpConfigSnippet(url, token) {
+  const serverConfig = { url };
+  if (token) {
+    serverConfig.headers = {
+      Authorization: `Bearer ${token}`,
+    };
+  }
+
   return JSON.stringify({
     mcpServers: {
-      'break-neko-pet': {
-        url,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
+      'pawkeeper-pet': serverConfig,
     },
   }, null, 2);
+}
+
+function createCurlSetStateExample(url, token) {
+  const authHeader = token ? ` -H "Authorization: Bearer ${token}"` : '';
+  return `curl -X POST ${url} -H "Content-Type: application/json"${authHeader} --data '{"state":"waving","playCount":3,"message":"Hi"}'`;
 }
 
 async function listenWithFallback(server, preferredPort, host) {
@@ -414,7 +430,7 @@ function registerPetTools({ mcpServer, z, petController, getSettings, saveSettin
   mcpServer.registerTool(
     'pet_get_state',
     {
-      description: 'Get the current Break Neko desktop pet, animation state, and MCP server status.',
+      description: 'Get the current Pawkeeper desktop pet, animation state, and MCP server status.',
       inputSchema: z.object({}),
       annotations: { readOnlyHint: true },
     },
@@ -496,7 +512,7 @@ function registerPetTools({ mcpServer, z, petController, getSettings, saveSettin
     'pet-state',
     'pet://state',
     {
-      title: 'Break Neko Pet State',
+      title: 'Pawkeeper Pet State',
       description: 'Current desktop pet state and available animation states.',
       mimeType: 'application/json',
     },
@@ -521,9 +537,11 @@ function toToolResult(value) {
 }
 
 function isAuthorized(req, url, token) {
+  if (!token) return true;
   const authHeader = req.headers.authorization || '';
   const headerToken = Array.isArray(authHeader) ? authHeader[0] : authHeader;
   return headerToken === `Bearer ${token}` ||
+    req.headers['x-pawkeeper-token'] === token ||
     req.headers['x-break-neko-token'] === token;
 }
 

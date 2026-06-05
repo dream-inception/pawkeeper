@@ -237,17 +237,18 @@ function createAutomationTestRunner({
             (async () => {
               const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
               const api = window.breakNeko;
-              const settings = await api.getSettings();
-              await api.saveSettings({
-                ...settings,
-                language: 'zh',
-                reminders: {
-                  sedentary: { enabled: true, intervalMinutes: 45, idleThresholdMinutes: 1 },
-                  hydration: { enabled: true, intervalMinutes: 5 },
-                  pomodoro: { enabled: false, focusMinutes: 25, breakMinutes: 5 },
-                },
-                tasks: [],
-              });
+              const languageSelect = document.getElementById('languageSelect');
+              languageSelect.value = 'zh';
+              languageSelect.dispatchEvent(new Event('change', { bubbles: true }));
+              await wait(100);
+              document.getElementById('sedentaryEnabled').checked = true;
+              document.getElementById('sedentaryInterval').value = '45';
+              document.getElementById('idleThresholdMinutes').value = '60';
+              document.getElementById('hydrationEnabled').checked = true;
+              document.getElementById('hydrationInterval').value = '5';
+              document.getElementById('pomodoroEnabled').checked = false;
+              document.getElementById('saveBtn').click();
+              await wait(300);
               const before = await api.startTimer();
               await wait(2500);
               const after = await api.getTimerState();
@@ -304,6 +305,38 @@ function createAutomationTestRunner({
               languageSelect.dispatchEvent(new Event('change', { bubbles: true }));
               return document.documentElement.lang;
             })()
+          `).catch((error) => {
+            console.error(error);
+          });
+        }
+
+        if (env.BREAK_NEKO_UI_TEST_PANEL) {
+          const selectedPanel = await mainWindow.webContents.executeJavaScript(`
+            (async () => {
+              const target = ${JSON.stringify(env.BREAK_NEKO_UI_TEST_PANEL)};
+              const tab = document.querySelector('[data-panel-target="' + target + '"]') || document.getElementById(target);
+              if (!tab) return false;
+              tab.click();
+              await new Promise((resolve) => setTimeout(resolve, 150));
+              return document.querySelector('.panel.is-active')?.id || false;
+            })()
+          `).catch((error) => {
+            console.error(error);
+          });
+          console.log(`UI test panel: ${selectedPanel || 'not selected'}`);
+        }
+
+        if (env.BREAK_NEKO_UI_TEST_SCROLL_Y) {
+          await mainWindow.webContents.executeJavaScript(`
+            window.scrollTo(0, ${Number.parseInt(env.BREAK_NEKO_UI_TEST_SCROLL_Y, 10) || 0});
+          `).catch((error) => {
+            console.error(error);
+          });
+        }
+
+        if (env.BREAK_NEKO_UI_TEST_SCROLL_SELECTOR) {
+          await mainWindow.webContents.executeJavaScript(`
+            document.querySelector(${JSON.stringify(env.BREAK_NEKO_UI_TEST_SCROLL_SELECTOR)})?.scrollIntoView({ block: 'center' });
           `).catch((error) => {
             console.error(error);
           });

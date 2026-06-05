@@ -97,6 +97,7 @@ test('normalizes desktop settings with safe defaults and legacy cat scale', () =
   assert.equal(settings.pet.interactionMode, 'quiet');
   assert.equal(settings.pet.mouseReactivity, 50);
   assert.equal(settings.pet.mcpEnabled, false);
+  assert.equal(settings.pet.mcpTokenRequired, false);
   assert.equal(settings.reminders.sedentary.intervalMinutes, 5);
   assert.equal(settings.reminders.sedentary.idleThresholdMinutes, 60);
   assert.equal(settings.reminders.hydration.enabled, false);
@@ -120,6 +121,7 @@ test('normalizes pet interaction settings', () => {
       mouseReactivity: 999,
       reducedMotion: true,
       mcpEnabled: false,
+      mcpTokenRequired: true,
       mcpLocalDomain: 'Neko.local',
       interactionPausedUntil: '2026-05-19T10:00:00.000Z',
     },
@@ -134,6 +136,7 @@ test('normalizes pet interaction settings', () => {
   assert.equal(settings.pet.mouseReactivity, 100);
   assert.equal(settings.pet.reducedMotion, true);
   assert.equal(settings.pet.mcpEnabled, false);
+  assert.equal(settings.pet.mcpTokenRequired, true);
   assert.equal(settings.pet.mcpLanEnabled, false);
   assert.equal(settings.pet.mcpLocalDomain, 'neko.local');
   assert.equal(settings.pet.interactionPausedUntil, '2026-05-19T10:00:00.000Z');
@@ -143,6 +146,7 @@ test('defaults MCP control to off for new settings', () => {
   const settings = normalizeDesktopSettings({});
 
   assert.equal(settings.pet.mcpEnabled, false);
+  assert.equal(settings.pet.mcpTokenRequired, false);
   assert.equal(settings.pet.mcpLanEnabled, false);
 });
 

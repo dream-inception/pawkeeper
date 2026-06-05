@@ -17,11 +17,6 @@
   box-sizing: border-box;
 }
 
-html {
-  scrollbar-color: var(--accent) var(--panel-soft);
-  scrollbar-width: thin;
-}
-
 body {
   margin: 0;
   min-height: 100vh;
@@ -1193,16 +1188,27 @@ select:focus-visible {
   --grid-line: rgba(125, 146, 255, 0.055);
 }
 
-html {
-  scrollbar-color: var(--brand) rgba(255, 255, 255, 0.06);
-}
-
 body {
   background:
     radial-gradient(circle at 16% -8%, rgba(98, 217, 255, 0.24), transparent 290px),
     radial-gradient(circle at 92% 6%, rgba(154, 124, 255, 0.22), transparent 360px),
     radial-gradient(circle at 58% 112%, rgba(20, 240, 190, 0.13), transparent 420px),
     linear-gradient(135deg, #0a1020 0%, var(--page-bg) 58%, #050710 100%);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  background: var(--brand);
+  background-clip: content-box;
 }
 
 body::before {
@@ -1862,6 +1868,7 @@ select:focus-visible {
   margin-top: 10px;
   color: var(--text-tertiary);
   font-size: 12px;
+  white-space: pre-line;
 }
 
 .queue-text {
@@ -2599,6 +2606,39 @@ body::before {
   letter-spacing: 0.14em;
 }
 
+.onboarding-card {
+  display: grid;
+  gap: 12px;
+}
+
+.onboarding-card[hidden] {
+  display: none;
+}
+
+.onboarding-card p {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.onboarding-actions .chip-button,
+.onboarding-actions button {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+}
+
+.onboarding-actions #completeOnboardingBtn {
+  flex: 1 1 132px;
+}
+
 @media (max-width: 760px) {
   .status-card {
     grid-template-columns: minmax(0, 1fr) 96px;
@@ -2626,5 +2666,701 @@ body::before {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 1ms !important;
+  }
+}
+
+/* Product IA refresh: Today / Rhythm / Neko. */
+:root {
+  --page-bg: #130f0b;
+  --surface-main: rgba(39, 30, 23, 0.92);
+  --surface-raised: rgba(52, 39, 30, 0.95);
+  --surface-control: rgba(255, 239, 219, 0.08);
+  --surface-control-hover: rgba(255, 239, 219, 0.13);
+  --stroke-subtle: rgba(255, 224, 190, 0.16);
+  --stroke-strong: rgba(255, 190, 129, 0.34);
+  --text-primary: #fff6ea;
+  --text-secondary: #d8c4ad;
+  --text-tertiary: #a28a76;
+  --brand: #ff9f5a;
+  --brand-strong: #ffd0a1;
+  --brand-soft: rgba(255, 159, 90, 0.16);
+  --positive: #b7e68a;
+  --danger: #ff8a8a;
+  --shadow-soft: 0 24px 70px rgba(0, 0, 0, 0.34);
+}
+
+body {
+  background:
+    radial-gradient(circle at 15% -8%, rgba(255, 159, 90, 0.22), transparent 320px),
+    radial-gradient(circle at 88% 4%, rgba(255, 208, 161, 0.14), transparent 380px),
+    linear-gradient(135deg, #1b130d 0%, #100d0a 64%, #090806 100%);
+}
+
+body::before {
+  opacity: 0.28;
+  background-size: 36px 36px;
+}
+
+.app-shell {
+  grid-template-columns: minmax(248px, 0.78fr) minmax(520px, 1.42fr);
+  width: min(100%, 980px);
+  gap: 20px;
+}
+
+.hero,
+.onboarding-card,
+.status-card,
+.settings-card,
+.panel,
+.timer-card,
+.cat-section,
+.app-preferences,
+.today-hero-card,
+.insight-card,
+.metric-card,
+.intensity-card,
+.section-block {
+  border-color: var(--stroke-subtle);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.018)),
+    var(--surface-main);
+}
+
+.hero,
+.onboarding-card,
+.status-card,
+.settings-card {
+  box-shadow: var(--shadow-soft);
+}
+
+.hero-glow {
+  background:
+    radial-gradient(circle, rgba(255, 159, 90, 0.42), transparent 58%),
+    radial-gradient(circle, rgba(255, 208, 161, 0.22), transparent 72%);
+}
+
+.eyebrow {
+  color: var(--brand-strong);
+}
+
+.settings-card {
+  display: grid;
+  gap: 16px;
+}
+
+.card-heading,
+.panel-tabs,
+.primary-actions {
+  margin-bottom: 0;
+}
+
+.panel-tabs {
+  grid-template-columns: repeat(3, 1fr);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tab-button {
+  min-height: 58px;
+}
+
+.tab-button.is-active {
+  border-color: var(--stroke-strong);
+  background: linear-gradient(180deg, rgba(255, 159, 90, 0.18), rgba(255, 159, 90, 0.08));
+  box-shadow: inset 0 -2px rgba(255, 159, 90, 0.36);
+}
+
+.panel {
+  min-height: 0;
+  padding: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.016)),
+    rgba(28, 21, 16, 0.86);
+}
+
+.today-hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 104px;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--stroke-subtle);
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.today-hero-card h3 {
+  margin: 4px 0 8px;
+  color: var(--text-primary);
+  font-size: 24px;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+}
+
+.today-cat-mark {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border: 1px solid rgba(255, 159, 90, 0.24);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at center, rgba(255, 159, 90, 0.24), transparent 64%),
+    rgba(0, 0, 0, 0.16);
+}
+
+.today-cat-mark img {
+  width: 68px;
+  height: 68px;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.34));
+}
+
+.today-metrics,
+.shortcut-grid,
+.intensity-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.today-metrics,
+.intensity-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric-card,
+.insight-card,
+.intensity-card,
+.section-block {
+  border: 1px solid var(--stroke-subtle);
+  border-radius: 20px;
+}
+
+.metric-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  min-height: 112px;
+}
+
+.metric-card span,
+.metric-card small {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.metric-card strong {
+  color: var(--text-primary);
+  font-size: 34px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-card.has-progress {
+  border-color: rgba(183, 230, 138, 0.34);
+  background:
+    radial-gradient(circle at 90% 4%, rgba(183, 230, 138, 0.16), transparent 78px),
+    var(--surface-main);
+}
+
+.insight-card {
+  padding: 16px;
+}
+
+.insight-card strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.week-summary {
+  margin-top: 10px;
+  color: var(--positive);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.shortcut-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.section-block {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.section-heading h4 {
+  margin: 2px 0 0;
+  color: var(--text-primary);
+  font-size: 17px;
+}
+
+.timer-card {
+  margin-bottom: 0;
+}
+
+.intensity-card {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-height: 146px;
+  padding: 14px;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.intensity-card:hover,
+.intensity-card:focus-visible {
+  border-color: var(--stroke-strong);
+  background: var(--surface-control-hover);
+}
+
+.intensity-card.is-active {
+  border-color: rgba(255, 159, 90, 0.52);
+  background:
+    radial-gradient(circle at 92% 8%, rgba(255, 159, 90, 0.2), transparent 88px),
+    rgba(255, 159, 90, 0.08);
+}
+
+.intensity-card strong {
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
+.intensity-card span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.try-intensity-btn {
+  align-self: end;
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.sr-only-field {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.rhythm-options {
+  margin-top: 2px;
+}
+
+.agent-card {
+  border-color: rgba(255, 159, 90, 0.28);
+  background:
+    radial-gradient(circle at 94% 0%, rgba(255, 159, 90, 0.16), transparent 110px),
+    var(--surface-main);
+}
+
+.cat-section {
+  border: 1px solid var(--stroke-subtle);
+  border-radius: 20px;
+  padding: 14px;
+}
+
+.cat-section.advanced-fields {
+  display: block;
+}
+
+.cat-section.advanced-fields[open] {
+  display: grid;
+  gap: 10px;
+}
+
+.cat-section.advanced-fields summary,
+.app-preferences summary {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 850;
+  list-style: none;
+}
+
+.cat-section.advanced-fields summary::-webkit-details-marker,
+.app-preferences summary::-webkit-details-marker {
+  display: none;
+}
+
+.cat-section.advanced-fields summary::after,
+.app-preferences summary::after {
+  margin-left: auto;
+  color: var(--text-tertiary);
+  content: "v";
+  transition: transform 160ms ease;
+}
+
+.cat-section.advanced-fields[open] summary::after,
+.app-preferences[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.cat-section.advanced-fields > .field-hint {
+  margin: 0 0 2px;
+}
+
+.app-preferences {
+  border: 1px solid var(--stroke-subtle);
+  border-radius: 18px;
+  padding: 0 14px;
+}
+
+.app-preferences .field {
+  margin-top: 8px;
+}
+
+#saveBtn {
+  min-height: 42px;
+  color: var(--text-tertiary);
+  background: transparent;
+}
+
+@media (max-width: 860px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    width: min(100%, 620px);
+  }
+
+  .today-metrics,
+  .intensity-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .today-hero-card {
+    grid-template-columns: 1fr;
+  }
+
+  .today-cat-mark {
+    width: 100%;
+  }
+}
+
+/* Visual refinement pass: reduce duplicate Today content and visual crowding. */
+:root {
+  --page-bg: #0f0e0c;
+  --surface-main: rgba(28, 24, 20, 0.92);
+  --surface-raised: rgba(38, 32, 26, 0.96);
+  --surface-control: rgba(255, 247, 234, 0.055);
+  --surface-control-hover: rgba(255, 247, 234, 0.095);
+  --stroke-subtle: rgba(255, 238, 214, 0.12);
+  --stroke-strong: rgba(242, 173, 96, 0.42);
+  --text-primary: #fff8ee;
+  --text-secondary: #d8c8b7;
+  --text-tertiary: #927f70;
+  --brand: #f2ad60;
+  --brand-strong: #ffd8a8;
+  --brand-soft: rgba(242, 173, 96, 0.14);
+  --positive: #bfe58a;
+  --shadow-soft: 0 18px 54px rgba(0, 0, 0, 0.3);
+}
+
+body {
+  background:
+    radial-gradient(circle at 18% -10%, rgba(242, 173, 96, 0.16), transparent 330px),
+    radial-gradient(circle at 92% 12%, rgba(255, 216, 168, 0.08), transparent 380px),
+    linear-gradient(135deg, #15110d 0%, var(--page-bg) 62%, #080706 100%);
+}
+
+.app-shell {
+  grid-template-columns: 224px minmax(0, 1fr);
+  gap: 24px;
+  width: min(100%, 1010px);
+  padding: 28px;
+}
+
+.sidebar {
+  gap: 18px;
+}
+
+.hero,
+.status-card,
+.settings-card {
+  border-radius: 26px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.044), rgba(255, 255, 255, 0.014)),
+    var(--surface-main);
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 0;
+  padding: 16px;
+}
+
+.hero-glow {
+  display: none;
+}
+
+.app-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  border-radius: 16px;
+}
+
+.hero-copy h1,
+h1 {
+  margin: 2px 0 0;
+  font-size: 22px;
+  letter-spacing: -0.04em;
+}
+
+.hero-copy p {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.app-version {
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+.status-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  padding: 18px;
+}
+
+.status-card::after {
+  display: none;
+}
+
+.status-orb {
+  justify-self: center;
+  width: 132px;
+  height: 132px;
+}
+
+.status-orb .status-time {
+  font-size: 31px;
+}
+
+.sidebar-stats {
+  display: none;
+}
+
+.reminder-chip-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.reminder-chip,
+.reminder-empty {
+  justify-content: space-between;
+  width: 100%;
+  min-height: 34px;
+  border-color: rgba(242, 173, 96, 0.16);
+  background: rgba(242, 173, 96, 0.065);
+}
+
+.settings-card {
+  gap: 20px;
+  padding: 22px;
+}
+
+.card-heading h2 {
+  font-size: 28px;
+}
+
+.panel-tabs {
+  gap: 10px;
+  padding: 8px;
+  border-radius: 22px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.tab-button {
+  min-height: 60px;
+  border-radius: 16px;
+}
+
+.panel {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border-radius: 26px;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.today-hero-card {
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 0 2px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.today-hero-card h3 {
+  margin-top: 2px;
+  font-size: 30px;
+}
+
+.today-hero-card p {
+  max-width: 55ch;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.today-cat-mark {
+  display: none;
+}
+
+.primary-actions {
+  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
+  gap: 14px;
+}
+
+#timerToggleBtn,
+#breakNowBtn {
+  min-height: 56px;
+  border-radius: 18px;
+}
+
+#breakNowBtn,
+#breakNowBtn:hover {
+  color: #211409;
+  background: linear-gradient(180deg, #ffe3bc 0%, var(--brand) 100%);
+  box-shadow: 0 16px 34px rgba(242, 173, 96, 0.18);
+}
+
+.today-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.metric-card {
+  min-height: 126px;
+  padding: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.048), rgba(255, 255, 255, 0.014)),
+    rgba(31, 25, 20, 0.92);
+}
+
+.metric-card strong {
+  font-size: 40px;
+}
+
+.metric-card span,
+.metric-card small {
+  color: var(--text-secondary);
+}
+
+.metric-card small {
+  color: var(--text-tertiary);
+}
+
+.insight-card {
+  padding: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.044), rgba(255, 255, 255, 0.014)),
+    rgba(32, 26, 22, 0.94);
+}
+
+.shortcut-grid {
+  gap: 14px;
+}
+
+.shortcut-grid button {
+  min-height: 50px;
+}
+
+.section-block {
+  margin-bottom: 0;
+  padding: 18px;
+}
+
+.timer-card {
+  padding: 18px;
+  border-radius: 22px;
+}
+
+.duration-control {
+  grid-template-columns: 42px minmax(112px, 1fr) 42px;
+}
+
+.duration-dial {
+  width: 104px;
+  height: 104px;
+}
+
+.intensity-grid {
+  gap: 14px;
+}
+
+.intensity-card {
+  min-height: 132px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
+    rgba(31, 25, 20, 0.9);
+}
+
+.intensity-card.is-active {
+  border-color: rgba(242, 173, 96, 0.58);
+  background:
+    radial-gradient(circle at 92% 8%, rgba(242, 173, 96, 0.16), transparent 88px),
+    rgba(242, 173, 96, 0.07);
+}
+
+button.secondary,
+#saveBtn {
+  background: rgba(255, 247, 234, 0.06);
+}
+
+button.secondary:hover,
+#saveBtn:hover {
+  background: rgba(255, 247, 234, 0.1);
+}
+
+@media (max-width: 920px) {
+  .app-shell {
+    grid-template-columns: 236px minmax(0, 1fr);
+    width: min(100%, 920px);
+    padding: 18px;
+    gap: 16px;
+  }
+
+  .status-card {
+    grid-template-columns: 1fr;
+  }
+
+  .intensity-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .today-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    width: min(100%, 640px);
+  }
+
+  .today-metrics {
+    grid-template-columns: 1fr;
   }
 }

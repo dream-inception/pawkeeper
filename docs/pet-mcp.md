@@ -1,17 +1,17 @@
-# Break Neko Pet MCP
+# Pawkeeper Pet MCP
 
-Break Neko runs a local pet-control server when `Enable MCP control` is on in the Cat settings panel. MCP control is opt-in for new installs.
+Pawkeeper runs a local pet-control server when `Enable MCP control` is on in the Cat settings panel. MCP control is opt-in for new installs.
 
 ## What It Exposes
 
 - MCP Streamable HTTP endpoint: `http://127.0.0.1:8765/mcp` by default.
 - Simple HTTP state endpoint: `http://127.0.0.1:8765/state`.
 - Health endpoint: `http://127.0.0.1:8765/health`.
-- If port `8765` is busy, Break Neko falls back to a random local port. The settings panel shows the actual URL.
-- Optional LAN/mDNS mode publishes `Break Neko Pet` as `_mcp._tcp` and exposes the same endpoints on your local network.
+- If port `8765` is busy, Pawkeeper falls back to a random local port. The settings panel shows the actual URL.
+- Optional LAN/mDNS mode publishes `Pawkeeper Pet` as `_mcp._tcp` and exposes the same endpoints on your local network.
 
-All control endpoints bind to `127.0.0.1` and require the token shown in the settings panel, except `/health`.
-When LAN/mDNS mode is enabled, control endpoints bind to all local interfaces and still require the same token.
+All control endpoints bind to `127.0.0.1`. By default they do not require a token, which keeps local testing simple.
+If you generate a token in settings, `/mcp` and `/state` require that bearer token. `/health` is always public.
 
 ## Cursor Setup
 
@@ -20,20 +20,19 @@ Create or edit one of these files:
 - Global: `~/.cursor/mcp.json`
 - Project: `.cursor/mcp.json`
 
-Paste the config shown in Break Neko settings. It has this shape:
+Paste the config shown in Pawkeeper settings. By default it has this shape:
 
 ```json
 {
   "mcpServers": {
-    "break-neko-pet": {
-      "url": "http://127.0.0.1:8765/mcp",
-      "headers": {
-        "Authorization": "Bearer YOUR_TOKEN"
-      }
+    "pawkeeper-pet": {
+      "url": "http://127.0.0.1:8765/mcp"
     }
   }
 }
 ```
+
+If you generate a token, the copied config includes an `Authorization: Bearer ...` header.
 
 Restart Cursor after saving. Cursor will expose these tools:
 
@@ -45,41 +44,44 @@ Restart Cursor after saving. Cursor will expose these tools:
 
 Example prompts for Cursor:
 
-- `Use break-neko-pet to make the pet wave for five seconds.`
+- `Use pawkeeper-pet to make the pet wave for five seconds.`
 - `Set my desktop pet to review mode while you inspect this code.`
-- `Clear MCP control for Break Neko pet.`
+- `Clear MCP control for Pawkeeper pet.`
 
 If Cursor cannot connect, open Cursor's Output panel and check `MCP Logs`.
 
-The settings panel also provides copy buttons for the Cursor config and bearer token. Regenerating the token invalidates old configs.
+The settings panel provides copy buttons for the Cursor config and optional bearer token. Generating a token enables authentication and old token-bearing configs must be updated after regeneration.
 
 ## Other MCP Clients
 
-Any AI agent that supports Streamable HTTP MCP can use the same `url` and `Authorization` header.
+Any AI agent that supports Streamable HTTP MCP can use the same `url`. Add the `Authorization` header only if you generated a token.
 
 If the client only supports stdio MCP, use the simple HTTP endpoint from a small wrapper script or hook instead.
+
+For ESP32 and other microcontrollers, use the simple `/state` HTTP endpoint instead of implementing a full MCP client. See [ESP32 pet control protocol](esp32-pet-mcp.md).
 
 ## LAN And mDNS
 
 Turn on `Allow LAN access via mDNS` in the Cat settings panel when you want another device on the same local network to control the pet.
 
-Break Neko then:
+Pawkeeper then:
 
 - Listens on all local network interfaces.
-- Advertises an mDNS service named `Break Neko Pet`.
+- Advertises an mDNS service named `Pawkeeper Pet`.
 - Uses service type `_mcp._tcp`.
 - Recommends a stable local domain like `http://YOUR-COMPUTER.local:8765/mcp`.
-- Publishes TXT metadata with `mcpPath=/mcp`, `statePath=/state`, and `auth=bearer`.
+- Publishes TXT metadata with `mcpPath=/mcp`, `statePath=/state`, and `auth=none` by default, or `auth=bearer` after you generate a token.
 - Shows the `.local` domain URL in the settings panel. IP URLs are also shown as fallback values, and are often the most reliable choice on Windows LANs.
 
-Other devices still need the bearer token shown in Break Neko settings:
+By default other devices can call the state endpoint without a token:
 
 ```bash
 curl -X POST http://YOUR-COMPUTER.local:8765/state \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
   --data '{"state":"waving","playCount":3,"message":"Hello from LAN"}'
 ```
+
+If you generated a token, add `-H "Authorization: Bearer YOUR_TOKEN"`.
 
 If `.local` name resolution is unavailable on a client, use the IP fallback shown in settings.
 
@@ -91,12 +93,12 @@ You can set the local domain in Cat settings. For example, enter:
 neko.local
 ```
 
-Break Neko will use `http://neko.local:8765/mcp` and `http://neko.local:8765/state` in LAN mode.
+Pawkeeper will use `http://neko.local:8765/mcp` and `http://neko.local:8765/state` in LAN mode.
 Entering a custom local domain automatically enables LAN/mDNS access when settings are saved.
 
 Notes:
 
-- The domain must end in `.local`; Break Neko normalizes it for you.
+- The domain must end in `.local`; Pawkeeper normalizes it for you.
 - Use simple ASCII names such as `neko.local` for best device compatibility.
 - If another device cannot resolve the custom name, try the IP fallback shown in settings.
 
@@ -105,17 +107,17 @@ Security notes:
 - Leave LAN/mDNS off unless you need another device to control the pet.
 - macOS may ask for local network permission or firewall permission.
 - Windows may show a Defender Firewall prompt the first time LAN mode binds to the network. Allow private-network access if you want other devices to connect.
-- Anyone with network reachability and the token can control the pet state.
+- Without a token, anyone with network reachability can control the pet state. Keep LAN/mDNS off unless you need it, or generate a token before enabling LAN access.
 
 ## Troubleshooting LAN
 
 - `.local` does not resolve: confirm LAN/mDNS is enabled, then try the IP fallback shown in settings.
 - `curl` connects by IP but not domain: Bonjour/mDNS name resolution is blocked or unsupported on that client.
-- Other devices cannot connect on macOS: allow Break Neko/Electron through the firewall and grant Local Network permission if prompted.
-- Other devices cannot connect on Windows: allow Break Neko/Electron through Windows Defender Firewall for private networks, then retry the IP URL shown in settings.
+- Other devices cannot connect on macOS: allow Pawkeeper/Electron through the firewall and grant Local Network permission if prompted.
+- Other devices cannot connect on Windows: allow Pawkeeper/Electron through Windows Defender Firewall for private networks, then retry the IP URL shown in settings.
 - Windows `.local` lookup is unreliable on some networks unless Bonjour/mDNS support is available. Prefer the IP URL for Windows-to-LAN testing.
 - Cursor cannot connect: use the local `127.0.0.1` config for same-machine Cursor. Use the `.local` config only for another device.
-- Token rejected: copy the current token from settings. If you regenerated it, old configs must be updated.
+- Token rejected: copy the current token from settings. If you regenerated it, old configs must be updated. If no token is shown, remove stale `Authorization` headers from the client config.
 
 ## Simple HTTP Control
 
@@ -126,23 +128,22 @@ Set a state:
 ```bash
 curl -X POST http://127.0.0.1:8765/state \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
   --data '{"state":"waving","playCount":3,"message":"Hi"}'
 ```
 
 Read current state:
 
 ```bash
-curl http://127.0.0.1:8765/state \
-  -H "Authorization: Bearer YOUR_TOKEN"
+curl http://127.0.0.1:8765/state
 ```
 
 Clear MCP control:
 
 ```bash
-curl -X DELETE http://127.0.0.1:8765/state \
-  -H "Authorization: Bearer YOUR_TOKEN"
+curl -X DELETE http://127.0.0.1:8765/state
 ```
+
+If you generated a token, add `-H "Authorization: Bearer YOUR_TOKEN"` to these requests.
 
 ## State Names
 
@@ -169,7 +170,7 @@ For coding agents, map lifecycle events to pet states:
 - Idle/waiting for user: `waiting`
 
 Keep state updates temporary by setting `durationMs`, usually `3000` to `10000`.
-Use `playCount` when you want the pet to play an animation a specific number of loops. If `playCount` is provided and `durationMs` is omitted, Break Neko estimates the duration from the Codex animation timing and clears the state after the requested loops.
+Use `playCount` when you want the pet to play an animation a specific number of loops. If `playCount` is provided and `durationMs` is omitted, Pawkeeper estimates the duration from the Codex animation timing and clears the state after the requested loops.
 
 Examples:
 
@@ -177,12 +178,10 @@ Examples:
 # Wave exactly three loops and show a speech bubble.
 curl -X POST http://127.0.0.1:8765/state \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
   --data '{"state":"waving","playCount":3,"message":"Done!"}'
 
 # Show an error reaction once.
 curl -X POST http://127.0.0.1:8765/state \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
   --data '{"state":"failed","playCount":1,"message":"Command failed"}'
 ```

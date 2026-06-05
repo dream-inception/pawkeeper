@@ -35,6 +35,7 @@ const DEFAULT_DESKTOP_SETTINGS = Object.freeze({
     mouseReactivity: 50,
     reducedMotion: false,
     mcpEnabled: false,
+    mcpTokenRequired: false,
     mcpLanEnabled: false,
     mcpLocalDomain: '',
     interactionPausedUntil: null,
@@ -60,7 +61,7 @@ const DEFAULT_DESKTOP_SETTINGS = Object.freeze({
 
 const MAIN_I18N = Object.freeze({
   en: {
-    openBreakNeko: 'Open Break Neko',
+    openBreakNeko: 'Open Pawkeeper',
     nextReminder: (time) => `Next: ${time}`,
     noRemindersScheduled: 'No reminders scheduled',
     pauseTimer: 'Pause Timer',
@@ -82,7 +83,7 @@ const MAIN_I18N = Object.freeze({
     dndEndedMessage: 'Reminders are active again.',
   },
   zh: {
-    openBreakNeko: '打开 Break Neko',
+    openBreakNeko: '打开 Pawkeeper',
     nextReminder: (time) => `下次：${time}`,
     noRemindersScheduled: '暂无提醒计划',
     pauseTimer: '暂停计时',
@@ -177,6 +178,7 @@ function normalizePetSettings(pet) {
     mouseReactivity: shared.clampNumber(safePet.mouseReactivity, 0, 100, DEFAULT_DESKTOP_SETTINGS.pet.mouseReactivity),
     reducedMotion: safePet.reducedMotion === true,
     mcpEnabled: safePet.mcpEnabled === true,
+    mcpTokenRequired: safePet.mcpTokenRequired === true,
     mcpLanEnabled: safePet.mcpLanEnabled === true,
     mcpLocalDomain: normalizeLocalDomain(safePet.mcpLocalDomain),
     interactionPausedUntil: typeof safePet.interactionPausedUntil === 'string'

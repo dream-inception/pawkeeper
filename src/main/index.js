@@ -1,5 +1,6 @@
 const path = require('node:path');
 const os = require('node:os');
+const fs = require('node:fs');
 const {
   app,
   BrowserWindow,
@@ -49,8 +50,23 @@ let reminderPresenter;
 
 async function bootstrap() {
   ({ default: Store } = await import('electron-store'));
-  app.setName('Break Neko');
-  app.setAppUserModelId('dev.dream-inception.break-neko');
+  app.setName('Pawkeeper');
+  app.setAppUserModelId('dev.dream-inception.pawkeeper');
+
+  if (process.env.BREAK_NEKO_TEST_PROFILE) {
+    const temporaryTestProfilePath = process.env.BREAK_NEKO_TEST_PROFILE === '1'
+      ? fs.mkdtempSync(path.join(os.tmpdir(), 'pawkeeper-test-profile-'))
+      : null;
+    const testProfilePath = process.env.BREAK_NEKO_TEST_PROFILE === '1'
+      ? temporaryTestProfilePath
+      : process.env.BREAK_NEKO_TEST_PROFILE;
+    app.setPath('userData', testProfilePath);
+    if (temporaryTestProfilePath) {
+      app.once('will-quit', () => {
+        fs.rmSync(temporaryTestProfilePath, { recursive: true, force: true });
+      });
+    }
+  }
 
   const hasSingleInstanceLock = app.requestSingleInstanceLock();
   if (!hasSingleInstanceLock) {
@@ -61,10 +77,6 @@ async function bootstrap() {
   app.on('second-instance', () => {
     showMainWindow();
   });
-
-  if (process.env.BREAK_NEKO_TEST_PROFILE === '1') {
-    app.setPath('userData', path.join(os.tmpdir(), 'break-neko-test-profile'));
-  }
 
   await app.whenReady();
   store = new Store({
@@ -255,7 +267,7 @@ function createMainWindow() {
     height: 720,
     minWidth: 720,
     minHeight: 620,
-    title: 'Break Neko',
+    title: 'Pawkeeper',
     backgroundColor: '#1a1a1a',
     icon: getAssetPath('break-neko-icon128.png'),
     webPreferences: {
@@ -423,6 +435,7 @@ function getPublicTimerState(state = timerService?.getState()) {
     ? {
       ...state,
       stats: statsTracker.getTodayStats(),
+      statsSummary: statsTracker.getStatsSummary(),
     }
     : null;
 }

@@ -9,4 +9,4 @@ You may not copy, redistribute, modify, publish, sell, sublicense, or otherwise
 use these assets without explicit written permission from the project owner.
 
 This includes, but is not limited to, files in the `assets/` directory and any
-Break Neko visual branding.
+Pawkeeper visual branding.

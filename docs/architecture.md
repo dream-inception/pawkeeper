@@ -1,6 +1,6 @@
 # Architecture
 
-Break Neko is a CommonJS Electron app with no frontend build step. Source
+Pawkeeper is a CommonJS Electron app with no frontend build step. Source
 files are loaded directly by Electron, so paths and packaged asset locations are
 kept explicit.
 
@@ -64,6 +64,9 @@ Runtime development is supported on macOS and Windows. The current builder
 configuration only packages macOS artifacts; Windows installer/portable targets
 are intentionally left for a release packaging pass.
 
+The active application tree lives under `src/`. Root-level renderer, break, or
+pet folders are not part of the active app layout and should not be reintroduced.
+
 ## Commands
 
 - `npm run dev`: start the Electron app.
@@ -71,6 +74,8 @@ are intentionally left for a release packaging pass.
 - `npm test`: run lightweight unit tests with Node's built-in test runner.
 - `npm run test:visual`: run the optional Electron visual smoke entrypoint.
 - `npm run build:mac`: package the macOS app with electron-builder.
+- Windows packaging is not configured yet; Windows compatibility work should be
+  validated through development smoke runs until a packaging pass is added.
 
 ## Maintenance Notes
 

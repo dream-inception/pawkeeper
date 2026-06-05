@@ -22,18 +22,18 @@ const PET_SOURCE_PRIORITY = Object.freeze({
   user: 30,
   mcp: 40,
 });
-const PET_STATE_BASE_DURATIONS = Object.freeze({
-  idle: [280, 110, 110, 140, 140, 320],
-  runningRight: [120, 120, 120, 120, 120, 120, 120, 220],
-  runningLeft: [120, 120, 120, 120, 120, 120, 120, 220],
-  waving: [140, 140, 140, 280],
-  jumping: [140, 140, 140, 140, 280],
-  failed: [140, 140, 140, 140, 140, 140, 140, 240],
-  waiting: [150, 150, 150, 150, 150, 260],
-  running: [120, 120, 120, 120, 120, 220],
-  review: [150, 150, 150, 150, 150, 280],
+const PET_STATE_FRAME_COUNTS = Object.freeze({
+  idle: 6,
+  runningRight: 8,
+  runningLeft: 8,
+  waving: 4,
+  jumping: 5,
+  failed: 8,
+  waiting: 6,
+  running: 6,
+  review: 6,
 });
-const PLAYBACK_SCALE = 1.8;
+const PET_FRAME_DURATION_MS = 1000 / 6;
 
 function createPetRuntimeController({ now = () => Date.now() } = {}) {
   const inputs = new Map();
@@ -174,14 +174,15 @@ function normalizePlayCount(playCount) {
 }
 
 function estimatePetStateDuration(state, playCount) {
-  const durations = PET_STATE_BASE_DURATIONS[state] || PET_STATE_BASE_DURATIONS.idle;
-  const oneLoop = durations.reduce((sum, duration) => sum + duration, 0) * PLAYBACK_SCALE;
+  const frameCount = PET_STATE_FRAME_COUNTS[state] || PET_STATE_FRAME_COUNTS.idle;
+  const oneLoop = frameCount * PET_FRAME_DURATION_MS;
   return Math.ceil(oneLoop * playCount) + 80;
 }
 
 module.exports = {
   PET_SOURCE_PRIORITY,
-  PET_STATE_BASE_DURATIONS,
+  PET_FRAME_DURATION_MS,
+  PET_STATE_FRAME_COUNTS,
   PET_STATES,
   assertPetState,
   createPetRuntimeController,

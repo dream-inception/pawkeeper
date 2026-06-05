@@ -47,8 +47,8 @@ function registerIpcHandlers({
     getTimerService().reset();
     return getPublicTimerState();
   });
-  ipcMain.handle('break:trigger-now', () => {
-    getTimerService().triggerManualReminder();
+  ipcMain.handle('break:trigger-now', (_event, presentationOverride) => {
+    getTimerService().triggerManualReminder({ presentationOverride });
     return getPublicTimerState();
   });
   ipcMain.handle('break:finish', () => {

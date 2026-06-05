@@ -1,8 +1,9 @@
-# Break Neko
+# Pawkeeper
 
-Break Neko is a desktop break reminder for macOS and Windows that brings a cat
-to guard your screen when it is time to stand up, drink water, focus, or finish
-a task.
+Pawkeeper is a desktop break reminder that uses a cat to make healthy
+interruptions feel easier to accept. It nudges you to stand up, drink water,
+focus, or finish a small task without turning the reminder into another cold
+productivity alert.
 
 The repository is organized around the Electron desktop app. The earlier browser
 extension source has been removed from the active codebase; Git history keeps
@@ -13,11 +14,19 @@ that work available for reference.
 - Stand-up, hydration, Pomodoro, and lightweight task reminders.
 - Three reminder styles: system notification, transparent cat overlay, and
   fullscreen cat break.
+- A lightweight onboarding path with recommended healthy-break defaults.
 - Custom cat image or video support.
 - Codex pet import with an animated desktop pet library.
 - Optional local MCP/HTTP pet control for Cursor, hooks, and LAN devices.
 - Tray/menu controls for starting, pausing, summoning the cat, and quiet time.
 - Local settings storage. Custom cat media stays on your device.
+
+## Platform Status
+
+- macOS: supported for development and packaging with `npm run build:mac`.
+- Windows: supported for development smoke testing with `npm run dev`. Windows
+  installer or portable packaging is not configured yet.
+- Linux: not a release target at the moment.
 
 ## Development
 
@@ -33,8 +42,8 @@ Run the desktop app:
 npm run dev
 ```
 
-Development runs are supported on macOS and Windows. Windows packaging is not
-configured yet; use `npm run dev` for compatibility testing on Windows.
+Development runs are supported on macOS and Windows. Windows packaging is not a
+release target yet; use `npm run dev` for compatibility testing on Windows.
 
 Run syntax checks:
 
@@ -71,6 +80,17 @@ maintenance notes, see [docs/architecture.md](docs/architecture.md).
 For pet MCP setup, Cursor config, LAN/mDNS mode, and hook examples, see
 [docs/pet-mcp.md](docs/pet-mcp.md).
 
+## Release Checklist
+
+Before publishing a build:
+
+- Run `npm run check`.
+- Run `npm test`.
+- Run the Electron UI, interaction, countdown, and Summon Cat smoke tests.
+- Capture English and Chinese settings screenshots.
+- Confirm the README platform status matches the artifacts being published.
+- Package macOS with `npm run build:mac`.
+
 ## Contact
 
 Questions, bug reports, and feature requests are welcome via GitHub Issues.
@@ -79,7 +99,7 @@ Questions, bug reports, and feature requests are welcome via GitHub Issues.
 
 Thank you for the interest and support!
 
-At the moment, Break Neko is developed and maintained by a single developer,
+At the moment, Pawkeeper is developed and maintained by a single developer,
 and I don’t currently have enough time to properly review and test external
 implementation PRs.
 

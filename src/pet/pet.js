@@ -6,7 +6,7 @@ const params = new URLSearchParams(window.location.search);
 const language = params.get('language') === 'zh' ? 'zh' : 'en';
 const defaultIcon = params.get('icon') || petIcon.getAttribute('src');
 const reducedMotion = params.get('reducedMotion') === '1';
-const playbackScale = 1.8;
+const FRAME_DURATION_MS = 1000 / 6;
 let codexPlayer = null;
 let lastTimerState = null;
 let dragState = null;
@@ -173,15 +173,15 @@ function createCodexPlayer({ canvas, fallbackImage, spritesheet }) {
     review: 8,
   };
   const defaultFramePlans = {
-    idle: { count: 6, durations: [280, 110, 110, 140, 140, 320] },
-    runningRight: { count: 8, durations: [120, 120, 120, 120, 120, 120, 120, 220] },
-    runningLeft: { count: 8, durations: [120, 120, 120, 120, 120, 120, 120, 220] },
-    waving: { count: 4, durations: [140, 140, 140, 280] },
-    jumping: { count: 5, durations: [140, 140, 140, 140, 280] },
-    failed: { count: 8, durations: [140, 140, 140, 140, 140, 140, 140, 240] },
-    waiting: { count: 6, durations: [150, 150, 150, 150, 150, 260] },
-    running: { count: 6, durations: [120, 120, 120, 120, 120, 220] },
-    review: { count: 6, durations: [150, 150, 150, 150, 150, 280] },
+    idle: { count: 6 },
+    runningRight: { count: 8 },
+    runningLeft: { count: 8 },
+    waving: { count: 4 },
+    jumping: { count: 5 },
+    failed: { count: 8 },
+    waiting: { count: 6 },
+    running: { count: 6 },
+    review: { count: 6 },
   };
   let framePlans = defaultFramePlans;
   let currentState = reducedMotion ? 'idle' : 'idle';
@@ -196,7 +196,7 @@ function createCodexPlayer({ canvas, fallbackImage, spritesheet }) {
     if (!isReady) return;
 
     const plan = framePlans[currentState] || framePlans.idle;
-    const duration = plan.durations[frameIndex] || 150;
+    const duration = plan.durationMs || FRAME_DURATION_MS;
     if (!lastFrameAt) {
       lastFrameAt = timestamp;
     } else if (timestamp - lastFrameAt >= duration) {
@@ -293,7 +293,7 @@ function createCodexPlayer({ canvas, fallbackImage, spritesheet }) {
       lastFrameAt = 0;
       loopPlayback = { remaining: Math.max(1, Math.min(100, Number.parseInt(count, 10) || 1)) };
       const plan = framePlans[state] || framePlans.idle;
-      temporaryUntil = performance.now() + plan.durations.reduce((sum, duration) => sum + duration, 0) * loopPlayback.remaining + 100;
+      temporaryUntil = performance.now() + plan.count * (plan.durationMs || FRAME_DURATION_MS) * loopPlayback.remaining + 100;
     },
     getVisualState() {
       return {
@@ -334,7 +334,7 @@ function detectFramePlans(image, rows, defaultFramePlans, geometry) {
     const safeCount = Math.max(1, count || plan.count);
     return [state, {
       count: safeCount,
-      durations: scaleDurations(getDurationsForCount(plan.durations, safeCount), playbackScale),
+      durationMs: FRAME_DURATION_MS,
     }];
   }));
 }
@@ -345,18 +345,6 @@ function hasVisiblePixels(context, width, height) {
     if (data[index] > 8) return true;
   }
   return false;
-}
-
-function getDurationsForCount(baseDurations, count) {
-  const durations = baseDurations.slice(0, count);
-  while (durations.length < count) {
-    durations.push(baseDurations[baseDurations.length - 1] || 150);
-  }
-  return durations;
-}
-
-function scaleDurations(durations, scale) {
-  return durations.map((duration) => Math.round(duration * scale));
 }
 
 if (params.get('mode') === 'codex' && params.get('spritesheet')) {

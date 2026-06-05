@@ -13,6 +13,7 @@ function createReminderPresenter({
   showBreakWindow,
 }) {
   const notificationRetryTimers = new Map();
+  const validPresentations = new Set(['notification', 'overlay', 'fullscreen']);
 
   function presentReminder(reminder) {
     const settings = getSettings();
@@ -46,6 +47,10 @@ function createReminderPresenter({
   }
 
   function getReminderPresentation(reminder, settings) {
+    if (validPresentations.has(reminder.presentationOverride)) {
+      return reminder.presentationOverride;
+    }
+
     // Manual summon is a direct user action; timed reminder intensity does not apply.
     if (reminder.type === 'manual') {
       return 'overlay';

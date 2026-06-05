@@ -64,6 +64,16 @@ const panels = Array.from(document.querySelectorAll('.panel'));
 const quickTaskTimeButtons = Array.from(document.querySelectorAll('[data-task-offset-minutes]'));
 const durationControls = Array.from(document.querySelectorAll('[data-duration-control]'));
 const durationPresetButtons = Array.from(document.querySelectorAll('[data-duration-preset]'));
+const onboardingPresetButtons = Array.from(document.querySelectorAll('[data-onboarding-preset]'));
+const previewOnboardingBtn = document.getElementById('previewOnboardingBtn');
+const completeOnboardingBtn = document.getElementById('completeOnboardingBtn');
+const intensityCards = Array.from(document.querySelectorAll('[data-reminder-intensity]'));
+const previewIntensityButtons = Array.from(document.querySelectorAll('[data-preview-intensity]'));
+const panelShortcutButtons = Array.from(document.querySelectorAll('[data-open-panel]'));
+const todayStatsGrid = document.getElementById('todayStatsGrid');
+const todayInsightTitle = document.getElementById('todayInsightTitle');
+const todayInsightText = document.getElementById('todayInsightText');
+const todayWeeklyText = document.getElementById('todayWeeklyText');
 
 let currentSettings;
 let currentTimerState;
@@ -83,11 +93,46 @@ const TASK_TEMPLATES = [
 
 const I18N = {
   en: {
-    heroEyebrow: 'Cat-powered reminders',
-    heroTagline: 'Stand, drink, focus, and let the cat nudge you gently.',
+    heroEyebrow: 'Cat break reminder',
+    heroTagline: 'A desktop cat that reminds you to rest, drink water, and stand up.',
+    workspaceEyebrow: 'Pawkeeper',
+    workspaceTitle: 'Rest reminders',
+    liveStatus: 'Status',
+    navToday: 'Overview',
+    reminders: 'Reminders',
+    neko: 'Cat',
+    todayHeroEyebrow: 'Overview',
+    todayHeroTitle: 'Today at a glance',
+    todayHeroCopy: 'See the next reminder, what you have completed, and call the cat when you need a short break.',
+    adjustRhythm: 'Adjust reminders',
+    setupNeko: 'Set up cat',
+    metricStand: 'Stand',
+    metricStandHint: 'stand breaks',
+    metricWater: 'Water',
+    metricWaterHint: 'water breaks',
+    metricFocus: 'Focus',
+    metricFocusHint: 'focus rounds',
+    reminderWhenEyebrow: 'When',
+    reminderWhenTitle: 'Break reminders',
+    reminderHowEyebrow: 'How',
+    reminderHowTitle: 'Reminder style',
+    taskReminderEyebrow: 'Tasks',
+    taskReminderTitle: 'One-time reminders',
+    intensityLightTitle: 'Light',
+    intensityLightCopy: 'System notification',
+    intensityMediumTitle: 'Medium',
+    intensityMediumCopy: 'Transparent cat overlay',
+    intensityStrongTitle: 'Strong',
+    intensityStrongCopy: 'Fullscreen cat break',
+    tryOnce: 'Try once',
     suggestedStart: 'Suggested start',
     suggestedCopy: 'Stand + water reminders with a transparent cat overlay.',
-    useDefaults: 'Use defaults',
+    onboardingHint: 'Pick a rhythm, preview the cat, then start reminders.',
+    presetHealthyBreaks: 'Stand + water',
+    presetFocus: 'Focus mode',
+    presetAll: 'All reminders',
+    previewCat: 'Try once',
+    useDefaults: 'Start with this',
     today: 'Today',
     controlCenter: 'Control center',
     reminderSetup: 'Reminder setup',
@@ -98,7 +143,7 @@ const I18N = {
     tasks: 'Tasks',
     cat: 'Cat',
     settings: 'Settings',
-    timersHint: 'Stand, drink, focus',
+    timersHint: 'When Pawkeeper reminds you and how it appears',
     standReminder: 'Stand up reminder',
     everyActiveMinutes: 'Remind me after active minutes',
     idleReset: 'Reset after idle minutes',
@@ -116,7 +161,7 @@ const I18N = {
     noTime: 'No time',
     markDone: 'Mark Done',
     done: 'Done',
-    catHint: 'Use the default cat or your own',
+    catHint: 'Desktop cat, Codex pets, and Agent feedback',
     chooseCat: 'Choose My Cat',
     useDefault: 'Use Default',
     defaultCat: 'Using the default orange cat',
@@ -125,8 +170,12 @@ const I18N = {
     showDesktopPet: 'Show desktop pet',
     desktopPet: 'Desktop pet',
     codexLibrary: 'Codex pet library',
+    petLibraryDetails: 'Pet library',
     overlayCat: 'Break overlay cat',
+    overlayCatDetails: 'Break overlay cat details',
     agentControl: 'Agent control',
+    connectionDetails: 'Connection details',
+    appPreferences: 'App preferences',
     desktopPetHelp: 'Shows a draggable cat. Double-click it to summon a break.',
     desktopPetSize: 'Desktop pet size',
     enablePetInteraction: 'Enable mouse interaction',
@@ -139,8 +188,11 @@ const I18N = {
     enableMcpControl: 'Enable MCP control',
     enableMcpLan: 'Allow LAN access via mDNS',
     mcpLocalDomain: 'Local domain',
+    agentControlHint: 'Let Cursor and local agents express progress through this desktop cat.',
     testPetInteraction: 'Test Pet Interaction',
     mcpRunning: (url) => `MCP server running: ${url}`,
+    mcpAuthNone: 'Auth: none (token not required)',
+    mcpAuthBearer: 'Auth: bearer token enabled',
     mcpStopped: 'MCP server is off.',
     mcpError: (message) => `MCP server error: ${message}`,
     mcpUsageHint: (path) => `Cursor: paste this into ${path}, then restart Cursor.`,
@@ -150,7 +202,7 @@ const I18N = {
     mcpMdnsHint: (name, type) => `mDNS: ${name} (${type})`,
     copyMcpConfig: 'Copy Cursor Config',
     copyMcpToken: 'Copy Token',
-    rotateMcpToken: 'Regenerate Token',
+    rotateMcpToken: 'Generate Token (optional)',
     copied: 'Copied',
     petTestNeedsEnabled: 'Turn on desktop pet first.',
     importCodexPet: 'Import Codex Pet',
@@ -184,7 +236,7 @@ const I18N = {
     saved: 'Saved!',
     appVersion: (version) => `Version ${version}`,
     runningReminders: 'Running reminders',
-    runningRhythm: (phase) => `Running - ${phase} rhythm`,
+    runningRhythm: (phase) => `Running - ${phase === 'break' ? 'break' : 'focus'} mode`,
     paused: 'Paused',
     nextReminder: (time) => `Next reminder: ${time}`,
     noNextReminder: 'Next reminder: none scheduled',
@@ -194,7 +246,12 @@ const I18N = {
     pendingTasksCount: (count) => `${count} item${count === 1 ? '' : 's'}`,
     todayStats: (stand, water, focus) => `Today: stand ${stand} · water ${water} · focus ${focus}`,
     todayStatsEmpty: 'No healthy breaks yet today. Start with one sip of water.',
-    todayStatsWin: 'Nice rhythm',
+    todayStatsWin: 'Nice work',
+    todayInsightStart: 'Start small.',
+    todayInsightStartCopy: 'One sip of water or one stretch is enough to start.',
+    todayInsightGood: 'You are taking better care of yourself today.',
+    todayInsightGoodCopy: (count) => `${count} completed break${count === 1 ? '' : 's'} today. The cat will keep the next one easy to notice.`,
+    weeklyStats: (completed, activeDays, streakDays) => `Week: ${completed} done · ${activeDays}/7 active days · ${streakDays} day streak`,
     pastTaskTime: 'Choose a future reminder time.',
     minutesShort: 'm',
     hoursShort: 'h',
@@ -218,11 +275,46 @@ const I18N = {
     },
   },
   zh: {
-    heroEyebrow: '小猫提醒助手',
-    heroTagline: '久坐、喝水、专注和待办，都让小猫温柔提醒你。',
+    heroEyebrow: '小猫休息提醒',
+    heroTagline: '桌面小猫会提醒你休息、喝水和站起来。',
+    workspaceEyebrow: 'Pawkeeper',
+    workspaceTitle: '休息提醒',
+    liveStatus: '状态',
+    navToday: '概览',
+    reminders: '提醒',
+    neko: '小猫',
+    todayHeroEyebrow: '概览',
+    todayHeroTitle: '今天概览',
+    todayHeroCopy: '看看下次什么时候提醒、今天完成了什么，需要休息时也可以直接召唤小猫。',
+    adjustRhythm: '调整提醒',
+    setupNeko: '设置小猫',
+    metricStand: '活动',
+    metricStandHint: '站起/走动',
+    metricWater: '喝水',
+    metricWaterHint: '喝水提醒',
+    metricFocus: '专注',
+    metricFocusHint: '专注轮次',
+    reminderWhenEyebrow: '时间',
+    reminderWhenTitle: '提醒项目',
+    reminderHowEyebrow: '方式',
+    reminderHowTitle: '提醒方式',
+    taskReminderEyebrow: '待办',
+    taskReminderTitle: '单次提醒',
+    intensityLightTitle: '轻提醒',
+    intensityLightCopy: '只显示系统通知',
+    intensityMediumTitle: '中提醒',
+    intensityMediumCopy: '显示透明小猫覆盖层',
+    intensityStrongTitle: '强提醒',
+    intensityStrongCopy: '打开全屏小猫休息页',
+    tryOnce: '试一次',
     suggestedStart: '推荐开始',
     suggestedCopy: '开启久坐 + 喝水提醒，并使用透明小猫覆盖层。',
-    useDefaults: '使用推荐设置',
+    onboardingHint: '选择要开启的提醒，先试一次小猫，再开始使用。',
+    presetHealthyBreaks: '久坐 + 喝水',
+    presetFocus: '专注模式',
+    presetAll: '全部提醒',
+    previewCat: '试一次',
+    useDefaults: '按此开始',
     today: '今天',
     controlCenter: '控制中心',
     reminderSetup: '提醒设置',
@@ -233,7 +325,7 @@ const I18N = {
     tasks: '待办',
     cat: '小猫',
     settings: '设置',
-    timersHint: '站立、喝水、专注',
+    timersHint: '设置什么时候提醒，以及提醒出现的方式',
     standReminder: '久坐提醒',
     everyActiveMinutes: '活跃多久后提醒',
     idleReset: '空闲多久后重置',
@@ -251,7 +343,7 @@ const I18N = {
     noTime: '未设置时间',
     markDone: '标记完成',
     done: '已完成',
-    catHint: '使用默认小猫或自家小猫',
+    catHint: '桌面小猫、Codex 宠物和 Agent 反馈',
     chooseCat: '选择我的小猫',
     useDefault: '使用默认',
     defaultCat: '正在使用默认橘猫',
@@ -260,8 +352,12 @@ const I18N = {
     showDesktopPet: '显示桌面小猫',
     desktopPet: '桌面宠物',
     codexLibrary: 'Codex 宠物库',
+    petLibraryDetails: '宠物库',
     overlayCat: '休息页小猫',
+    overlayCatDetails: '休息页小猫细节',
     agentControl: 'Agent 控制',
+    connectionDetails: '连接细节',
+    appPreferences: '应用偏好',
     desktopPetHelp: '显示一只可拖动的小猫，双击可召唤休息。',
     desktopPetSize: '桌面宠物尺寸',
     enablePetInteraction: '启用鼠标互动',
@@ -274,8 +370,11 @@ const I18N = {
     enableMcpControl: '启用 MCP 控制',
     enableMcpLan: '允许局域网通过 mDNS 访问',
     mcpLocalDomain: '本地域名',
+    agentControlHint: '让 Cursor 和本机 Agent 通过这只桌面小猫表达工作状态。',
     testPetInteraction: '测试宠物互动',
     mcpRunning: (url) => `MCP 服务运行中：${url}`,
+    mcpAuthNone: '认证：无（不需要 token）',
+    mcpAuthBearer: '认证：已启用 bearer token',
     mcpStopped: 'MCP 服务未开启。',
     mcpError: (message) => `MCP 服务错误：${message}`,
     mcpUsageHint: (path) => `Cursor：把下面配置放到 ${path}，然后重启 Cursor。`,
@@ -285,7 +384,7 @@ const I18N = {
     mcpMdnsHint: (name, type) => `mDNS：${name}（${type}）`,
     copyMcpConfig: '复制 Cursor 配置',
     copyMcpToken: '复制 Token',
-    rotateMcpToken: '重新生成 Token',
+    rotateMcpToken: '生成 Token（可选）',
     copied: '已复制',
     petTestNeedsEnabled: '请先打开显示桌面小猫。',
     importCodexPet: '导入 Codex 宠物',
@@ -319,7 +418,7 @@ const I18N = {
     saved: '已保存！',
     appVersion: (version) => `版本 ${version}`,
     runningReminders: '提醒运行中',
-    runningRhythm: (phase) => `运行中 - ${phase === 'break' ? '休息' : '专注'}节奏`,
+    runningRhythm: (phase) => `提醒运行中 - ${phase === 'break' ? '休息' : '专注'}`,
     paused: '已暂停',
     nextReminder: (time) => `下次提醒：${time}`,
     noNextReminder: '下次提醒：暂无',
@@ -329,7 +428,12 @@ const I18N = {
     pendingTasksCount: (count) => `${count} 个`,
     todayStats: (stand, water, focus) => `今天：活动 ${stand} · 喝水 ${water} · 专注 ${focus}`,
     todayStatsEmpty: '今天还没有完成提醒，先从一次喝水开始。',
-    todayStatsWin: '节奏不错',
+    todayStatsWin: '做得不错',
+    todayInsightStart: '从一个小动作开始。',
+    todayInsightStartCopy: '先喝一口水，或站起来伸展一下，就已经很好。',
+    todayInsightGood: '今天已经照顾自己好几次了。',
+    todayInsightGoodCopy: (count) => `今天已经完成 ${count} 次休息/喝水提醒，小猫会继续帮你看着下一次。`,
+    weeklyStats: (completed, activeDays, streakDays) => `本周：完成 ${completed} 次 · 活跃 ${activeDays}/7 天 · 连续 ${streakDays} 天`,
     pastTaskTime: '请选择未来的提醒时间。',
     minutesShort: '分',
     hoursShort: '小时',
@@ -481,6 +585,55 @@ function renderEnabledReminderSummary(state = currentTimerState) {
   renderReminderChips(statusReminderChips, items);
 }
 
+function syncIntensityCards() {
+  const value = reminderIntensityInput?.value || 'overlay';
+  intensityCards.forEach((card) => {
+    const isSelected = card.dataset.reminderIntensity === value;
+    card.classList.toggle('is-active', isSelected);
+    card.setAttribute('aria-checked', String(isSelected));
+  });
+}
+
+function setReminderIntensity(value) {
+  if (!reminderIntensityInput || !value) return;
+  reminderIntensityInput.value = value;
+  reminderIntensityInput.dispatchEvent(new Event('change', { bubbles: true }));
+  syncIntensityCards();
+}
+
+function activatePanelById(panelId) {
+  const button = tabButtons.find((tabButton) => tabButton.dataset.panelTarget === panelId);
+  if (button) activateTab(button, { focus: true });
+}
+
+function renderTodayStats({ standCount = 0, waterCount = 0, focusCount = 0, weeklySummary = '' } = {}) {
+  const stats = [
+    { type: 'sedentary', value: standCount },
+    { type: 'hydration', value: waterCount },
+    { type: 'pomodoro', value: focusCount },
+  ];
+  stats.forEach((stat) => {
+    const card = todayStatsGrid?.querySelector(`[data-stat-type="${stat.type}"]`);
+    if (!card) return;
+    card.querySelector('strong').textContent = String(stat.value);
+    card.classList.toggle('has-progress', stat.value > 0);
+  });
+
+  const totalHealthyActions = standCount + waterCount + focusCount;
+  if (todayInsightTitle && todayInsightText) {
+    todayInsightTitle.textContent = totalHealthyActions > 0
+      ? t('todayInsightGood')
+      : t('todayInsightStart');
+    todayInsightText.textContent = totalHealthyActions > 0
+      ? t('todayInsightGoodCopy', totalHealthyActions)
+      : t('todayInsightStartCopy');
+  }
+  if (todayWeeklyText) {
+    todayWeeklyText.textContent = weeklySummary;
+    todayWeeklyText.hidden = !weeklySummary;
+  }
+}
+
 function clampInput(input, fallback) {
   return shared.clampNumber(input.value, Number(input.min), Number(input.max), fallback);
 }
@@ -534,12 +687,57 @@ function readSettingsFromForm() {
   };
 }
 
+function applyOnboardingPreset(preset) {
+  const presets = {
+    healthy: {
+      sedentary: true,
+      hydration: true,
+      pomodoro: false,
+      intensity: 'overlay',
+    },
+    focus: {
+      sedentary: false,
+      hydration: true,
+      pomodoro: true,
+      intensity: 'notification',
+    },
+    all: {
+      sedentary: true,
+      hydration: true,
+      pomodoro: true,
+      intensity: 'overlay',
+    },
+  };
+  const selectedPreset = presets[preset] || presets.healthy;
+  sedentaryEnabledInput.checked = selectedPreset.sedentary;
+  sedentaryIntervalInput.value = 45;
+  idleThresholdInput.value = 5;
+  hydrationEnabledInput.checked = selectedPreset.hydration;
+  hydrationIntervalInput.value = selectedPreset.pomodoro ? 90 : 60;
+  pomodoroEnabledInput.checked = selectedPreset.pomodoro;
+  pomodoroFocusInput.value = 25;
+  pomodoroBreakInput.value = 5;
+  reminderIntensityInput.value = selectedPreset.intensity;
+  currentSettings = readSettingsFromForm();
+  syncAllDurationControls();
+  renderEnabledReminderSummary();
+}
+
+function setActiveOnboardingPreset(button) {
+  onboardingPresetButtons.forEach((presetButton) => {
+    const isActive = presetButton === button;
+    presetButton.classList.toggle('is-active', isActive);
+    presetButton.setAttribute('aria-pressed', String(isActive));
+  });
+}
+
 function applySettingsToForm(settings) {
   currentSettings = settings;
   document.documentElement.lang = settings.language === 'zh' ? 'zh-CN' : 'en';
   onboardingPanel.hidden = settings.hasCompletedOnboarding;
   languageSelect.value = settings.language || 'en';
   reminderIntensityInput.value = settings.reminderIntensity;
+  syncIntensityCards();
   breakTimeInput.value = settings.breakTime;
   snoozeMinutesInput.value = settings.snoozeMinutes || 5;
   sedentaryEnabledInput.checked = settings.reminders.sedentary.enabled;
@@ -615,21 +813,39 @@ function setCheckboxLabel(input, value) {
 }
 
 function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach((element) => {
+    element.textContent = t(element.dataset.i18n);
+  });
   setText('.hero .eyebrow', t('heroEyebrow'));
   setText('.hero-copy p', t('heroTagline'));
   setText('#onboardingPanel .eyebrow', t('suggestedStart'));
   setText('#onboardingPanel strong', t('suggestedCopy'));
+  setText('#onboardingHint', t('onboardingHint'));
+  setText('[data-onboarding-preset="healthy"]', t('presetHealthyBreaks'));
+  setText('[data-onboarding-preset="focus"]', t('presetFocus'));
+  setText('[data-onboarding-preset="all"]', t('presetAll'));
+  setText('#previewOnboardingBtn', t('previewCat'));
   setText('#completeOnboardingBtn', t('useDefaults'));
-  setText('.status-card .eyebrow', t('today'));
-  setText('.card-heading .eyebrow', t('controlCenter'));
-  setText('.card-heading h2', t('reminderSetup'));
+  setText('.status-card .eyebrow', t('liveStatus'));
+  setText('.card-heading .eyebrow', t('workspaceEyebrow'));
+  setText('.card-heading h2', t('workspaceTitle'));
+  setText('#todayHeroEyebrow', t('todayHeroEyebrow'));
+  setText('#todayHeroTitle', t('todayHeroTitle'));
+  setText('#todayHeroCopy', t('todayHeroCopy'));
+  setText('[data-open-panel="timersPanel"]', t('adjustRhythm'));
+  setText('[data-open-panel="catPanel"]', t('setupNeko'));
   setText('#breakNowBtn span', t('summonCat'));
-  setText('[data-panel-target="timersPanel"] span', t('timers'));
-  setText('[data-panel-target="tasksPanel"] span', t('tasks'));
-  setText('[data-panel-target="catPanel"] span', t('cat'));
-  setText('[data-panel-target="settingsPanel"] span', t('settings'));
-  setText('#timersPanel h3', t('timers'));
+  setText('[data-panel-target="todayPanel"] span', t('navToday'));
+  setText('[data-panel-target="timersPanel"] span', t('reminders'));
+  setText('[data-panel-target="catPanel"] span', t('neko'));
+  setText('#timersPanel h3', t('reminders'));
   setText('#timersPanel .sub-card-title span', t('timersHint'));
+  setText('#reminderWhenEyebrow', t('reminderWhenEyebrow'));
+  setText('#reminderWhenTitle', t('reminderWhenTitle'));
+  setText('#reminderHowEyebrow', t('reminderHowEyebrow'));
+  setText('#reminderHowTitle', t('reminderHowTitle'));
+  setText('#taskReminderEyebrow', t('taskReminderEyebrow'));
+  setText('#taskReminderTitle', t('taskReminderTitle'));
   setText('label[for="sedentaryInterval"]', t('everyActiveMinutes'));
   setText('label[for="idleThresholdMinutes"]', t('idleReset'));
   setText('label[for="hydrationInterval"]', t('everyMinutes'));
@@ -646,12 +862,14 @@ function applyTranslations() {
   renderTaskTemplateOptions();
   setText('label[for="taskTime"]', t('remindAt'));
   setText('#addTaskBtn', t('addTask'));
-  setText('#catPanel h3', t('cat'));
+  setText('#catPanel h3', t('neko'));
   setText('#catPanel .sub-card-title span', t('catHint'));
   setText('#desktopPetSectionTitle', t('desktopPet'));
-  setText('#codexLibrarySectionTitle', t('codexLibrary'));
-  setText('#overlayCatSectionTitle', t('overlayCat'));
+  setText('#petLibrarySummary', t('petLibraryDetails'));
+  setText('#overlayCatSummary', t('overlayCatDetails'));
   setText('#agentControlSectionTitle', t('agentControl'));
+  setText('#connectionDetailsSummary', t('connectionDetails'));
+  setText('#appPreferencesSummary', t('appPreferences'));
   setCheckboxLabel(petEnabledInput, t('showDesktopPet'));
   setText('#petHelpText', t('desktopPetHelp'));
   setText('label[for="petSize"]', t('desktopPetSize'));
@@ -664,6 +882,7 @@ function applyTranslations() {
   setCheckboxLabel(petReducedMotionInput, t('reducePetMotion'));
   setCheckboxLabel(petMcpEnabledInput, t('enableMcpControl'));
   setCheckboxLabel(petMcpLanEnabledInput, t('enableMcpLan'));
+  setText('#agentControlHint', t('agentControlHint'));
   setText('label[for="petMcpLocalDomain"]', t('mcpLocalDomain'));
   setText('#testPetInteractionBtn', t('testPetInteraction'));
   setText('#copyMcpConfigBtn', t('copyMcpConfig'));
@@ -695,7 +914,7 @@ function applyTranslations() {
       ? `+${minutes / 60}${t('hoursShort')}`
       : `+${minutes}${t('minutesShort')}`;
   });
-  document.querySelectorAll('.advanced-fields summary').forEach((summary) => {
+  document.querySelectorAll('.timer-card .advanced-fields summary').forEach((summary) => {
     summary.textContent = t('preciseSettings');
   });
   setText('label[for="breakTime"]', t('countdown'));
@@ -938,11 +1157,28 @@ function renderTimerState(state) {
   const focusCount = state.stats?.pomodoroCompletedCount || 0;
   const statsSummary = t('todayStats', standCount, waterCount, focusCount);
   const totalHealthyActions = standCount + waterCount + focusCount;
-  todayStatsText.textContent = totalHealthyActions === 0
+  const todayStatsSummary = totalHealthyActions === 0
     ? t('todayStatsEmpty')
     : totalHealthyActions >= 3
     ? `${statsSummary} · ${t('todayStatsWin')}`
     : statsSummary;
+  const weeklySummary = state.statsSummary?.week
+    ? t(
+      'weeklyStats',
+      state.statsSummary.week.completedCount || 0,
+      state.statsSummary.week.activeDays || 0,
+      state.statsSummary.streakDays || 0
+    )
+    : '';
+  renderTodayStats({
+    standCount,
+    waterCount,
+    focusCount,
+    weeklySummary,
+  });
+  todayStatsText.textContent = weeklySummary
+    ? `${todayStatsSummary}\n${weeklySummary}`
+    : todayStatsSummary;
   timerToggleLabel.textContent = state.running ? t('pauseReminders') : t('startReminders');
   timerToggleBtn.classList.toggle('is-running', state.running);
 }
@@ -1095,6 +1331,7 @@ async function renderMcpStatus() {
       : status.running && status.url
         ? [
           t('mcpRunning', status.stateUrl?.replace('/state', '/mcp') || status.url),
+          status.tokenValue ? t('mcpAuthBearer') : t('mcpAuthNone'),
           status.localDomainUrl ? t('mcpLanHint', [status.localDomainUrl]) : '',
           status.mdnsService ? t('mcpMdnsHint', status.mdnsService.name, status.mdnsService.type) : '',
           status.platform === 'win32' && status.lanUrls?.length ? t('mcpWindowsLanHint') : '',
@@ -1126,10 +1363,10 @@ function startCatPreviewPlayer(spritesheet) {
   const image = new Image();
   const columns = 8;
   const rows = 9;
-  const playbackScale = 1.8;
+  const frameDurationMs = 1000 / 6;
   let cellWidth = 192;
   let cellHeight = 208;
-  let idleDurations = [280, 110, 110, 140, 140, 320];
+  let frameCount = 6;
   let frameIndex = 0;
   let lastFrameAt = 0;
   let animationFrameId = 0;
@@ -1137,11 +1374,10 @@ function startCatPreviewPlayer(spritesheet) {
 
   function draw(timestamp = performance.now()) {
     if (stopped) return;
-    const duration = idleDurations[frameIndex] || 150;
     if (!lastFrameAt) {
       lastFrameAt = timestamp;
-    } else if (timestamp - lastFrameAt >= duration) {
-      frameIndex = (frameIndex + 1) % idleDurations.length;
+    } else if (timestamp - lastFrameAt >= frameDurationMs) {
+      frameIndex = (frameIndex + 1) % frameCount;
       lastFrameAt = timestamp;
     }
     context.clearRect(0, 0, cellWidth, cellHeight);
@@ -1165,14 +1401,11 @@ function startCatPreviewPlayer(spritesheet) {
     cellHeight = Math.floor(image.naturalHeight / rows);
     catPreviewCanvas.width = cellWidth;
     catPreviewCanvas.height = cellHeight;
-    idleDurations = scaleDurations(
-      getDurationsForCount(idleDurations, detectNonEmptyFrameCount(image, 0, {
-        columns,
-        cellWidth,
-        cellHeight,
-      })),
-      playbackScale
-    );
+    frameCount = detectNonEmptyFrameCount(image, 0, {
+      columns,
+      cellWidth,
+      cellHeight,
+    });
     draw();
   };
   image.onerror = () => {
@@ -1225,18 +1458,6 @@ function hasVisiblePixels(context, width, height) {
     if (data[index] > 8) return true;
   }
   return false;
-}
-
-function getDurationsForCount(baseDurations, count) {
-  const durations = baseDurations.slice(0, count);
-  while (durations.length < count) {
-    durations.push(baseDurations[baseDurations.length - 1] || 150);
-  }
-  return durations;
-}
-
-function scaleDurations(durations, scale) {
-  return durations.map((duration) => Math.round(duration * scale));
 }
 
 function renderCatPreview() {
@@ -1384,6 +1605,36 @@ tabButtons.forEach((button, index) => {
   });
 });
 
+panelShortcutButtons.forEach((button) => {
+  button.addEventListener('click', () => activatePanelById(button.dataset.openPanel));
+});
+
+intensityCards.forEach((card) => {
+  card.addEventListener('click', (event) => {
+    if (event.target.closest('[data-preview-intensity]')) return;
+    setReminderIntensity(card.dataset.reminderIntensity);
+  });
+  card.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    setReminderIntensity(card.dataset.reminderIntensity);
+  });
+});
+
+previewIntensityButtons.forEach((button) => {
+  button.addEventListener('click', async (event) => {
+    event.stopPropagation();
+    const intensity = button.dataset.previewIntensity;
+    setReminderIntensity(intensity);
+    try {
+      await saveSettings({ showMessage: false });
+    } catch (error) {
+      console.error('Failed to save settings before previewing intensity:', error);
+    }
+    renderTimerState(await api.triggerBreakNow(intensity));
+  });
+});
+
 timerToggleBtn.addEventListener('click', async () => {
   if (currentTimerState?.running) {
     renderTimerState(await api.pauseTimer());
@@ -1401,7 +1652,7 @@ document.getElementById('breakNowBtn').addEventListener('click', async () => {
     console.error('Failed to save settings before starting a break:', error);
   }
 
-  renderTimerState(await api.triggerBreakNow());
+  renderTimerState(await api.triggerBreakNow(reminderIntensityInput.value));
 });
 
 document.getElementById('pause30Btn').addEventListener('click', async () => {
@@ -1564,6 +1815,7 @@ form.addEventListener('change', (event) => {
   if (event.target === languageSelect) return;
   currentSettings = readSettingsFromForm();
   syncAllDurationControls();
+  syncIntensityCards();
   renderEnabledReminderSummary();
   scheduleAutoSave();
 });
@@ -1636,8 +1888,28 @@ document.getElementById('clearCatBtn').addEventListener('click', async () => {
   applySettingsToForm(await api.clearCustomCat());
 });
 
-document.getElementById('completeOnboardingBtn').addEventListener('click', async () => {
+onboardingPresetButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    setActiveOnboardingPreset(button);
+    applyOnboardingPreset(button.dataset.onboardingPreset);
+  });
+});
+
+previewOnboardingBtn?.addEventListener('click', async () => {
+  try {
+    await saveSettings({ showMessage: false });
+  } catch (error) {
+    console.error('Failed to save onboarding settings before preview:', error);
+  }
+
+  renderTimerState(await api.triggerBreakNow(reminderIntensityInput.value));
+});
+
+completeOnboardingBtn?.addEventListener('click', async () => {
+  await saveSettings({ showMessage: false });
   applySettingsToForm(await api.completeOnboarding());
+  renderTimerState(await api.startTimer());
+  showSavedMessage();
 });
 
 api.onTimerState((state) => {

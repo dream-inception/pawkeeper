@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld('breakNeko', {
   startTimer: (mode) => ipcRenderer.invoke('timer:start', mode),
   pauseTimer: () => ipcRenderer.invoke('timer:pause'),
   resetTimer: (mode) => ipcRenderer.invoke('timer:reset', mode),
-  triggerBreakNow: () => ipcRenderer.invoke('break:trigger-now'),
+  triggerBreakNow: (intensity) => ipcRenderer.invoke('break:trigger-now', intensity),
   finishBreak: () => ipcRenderer.invoke('break:finish'),
   setBreakMousePassthrough: (enabled) => ipcRenderer.invoke('break:set-mouse-passthrough', enabled),
   snoozeReminder: (minutes) => ipcRenderer.invoke('reminder:snooze', minutes),

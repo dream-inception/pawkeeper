@@ -11,7 +11,7 @@ test('builds stable local mDNS host names', () => {
   assert.equal(getLocalMdnsHostName('MacBook-Pro'), 'MacBook-Pro.local');
   assert.equal(getLocalMdnsHostName('MacBook Pro.local'), 'MacBook-Pro.local');
   assert.equal(getLocalMdnsHostName('张三的 MacBook'), 'MacBook.local');
-  assert.equal(getLocalMdnsHostName(''), 'break-neko.local');
+  assert.equal(getLocalMdnsHostName(''), 'pawkeeper.local');
 });
 
 test('uses custom local domain before host fallback', () => {
@@ -23,10 +23,20 @@ test('uses custom local domain before host fallback', () => {
   }), /\.local$/);
 });
 
-test('builds Cursor MCP config snippets with bearer auth', () => {
+test('builds Cursor MCP config snippets without bearer auth by default', () => {
+  assert.deepEqual(JSON.parse(createMcpConfigSnippet('http://neko.local:8765/mcp', '')), {
+    mcpServers: {
+      'pawkeeper-pet': {
+        url: 'http://neko.local:8765/mcp',
+      },
+    },
+  });
+});
+
+test('builds Cursor MCP config snippets with optional bearer auth', () => {
   assert.deepEqual(JSON.parse(createMcpConfigSnippet('http://neko.local:8765/mcp', 'token-123')), {
     mcpServers: {
-      'break-neko-pet': {
+      'pawkeeper-pet': {
         url: 'http://neko.local:8765/mcp',
         headers: {
           Authorization: 'Bearer token-123',

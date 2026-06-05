@@ -16,7 +16,7 @@ function createMenuController({
     const icon = nativeImage.createFromPath(getAssetPath('break-neko-tray16.png'));
     const trayIcon = icon.resize({ width: 16, height: 16 });
     tray = new Tray(trayIcon);
-    tray.setToolTip('Break Neko');
+    tray.setToolTip('Pawkeeper');
     tray.on('click', showMainWindow);
     tray.on('double-click', showMainWindow);
     refreshTrayMenu();
@@ -82,7 +82,7 @@ function createMenuController({
     const language = getSettings()?.language || defaultLanguage;
     Menu.setApplicationMenu(Menu.buildFromTemplate([
       {
-        label: 'Break Neko',
+        label: 'Pawkeeper',
         submenu: [
           { role: 'about' },
           { type: 'separator' },

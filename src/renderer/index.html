@@ -7,7 +7,7 @@
     http-equiv="Content-Security-Policy"
     content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' file: data:; media-src 'self' file:;"
   >
-  <title>Break Neko</title>
+  <title>Pawkeeper</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -15,104 +15,144 @@
     <aside class="sidebar">
       <header class="hero">
         <div class="hero-glow"></div>
-        <img src="../../assets/break-neko-icon128.png" alt="Break Neko app icon" class="app-icon">
+        <img src="../../assets/break-neko-icon128.png" alt="Pawkeeper app icon" class="app-icon">
         <div class="hero-copy">
-          <span class="eyebrow">Cat-powered reminders</span>
-          <h1>Break Neko</h1>
+          <span class="eyebrow">Cat break reminder</span>
+          <h1>Pawkeeper</h1>
           <span id="appVersion" class="app-version" aria-live="polite">Version --</span>
-          <p>Stand, drink, focus, and let the cat interrupt you gently.</p>
+          <p>A desktop cat that reminds you to rest, drink water, and stand up.</p>
         </div>
       </header>
 
       <section class="onboarding-card" id="onboardingPanel" hidden>
         <div>
           <span class="eyebrow">Suggested start</span>
-          <strong>Stand + water reminders with a transparent cat overlay.</strong>
+          <strong>Start with stand + water, then let the cat show you how breaks feel.</strong>
+          <p id="onboardingHint">Pick a rhythm, try the cat once, then start your healthy flow.</p>
         </div>
-        <button type="button" id="completeOnboardingBtn">Use defaults</button>
+        <div class="onboarding-actions" role="group" aria-label="Suggested reminder presets">
+          <button type="button" class="chip-button is-active" data-onboarding-preset="healthy" aria-pressed="true">Stand + water</button>
+          <button type="button" class="chip-button" data-onboarding-preset="focus" aria-pressed="false">Focus rhythm</button>
+          <button type="button" class="chip-button" data-onboarding-preset="all" aria-pressed="false">All reminders</button>
+        </div>
+        <div class="onboarding-actions">
+          <button type="button" id="previewOnboardingBtn" class="secondary">Try once</button>
+          <button type="button" id="completeOnboardingBtn">Start with this</button>
+        </div>
       </section>
 
       <section class="status-card">
         <div class="status-copy">
-          <span class="eyebrow">Today</span>
+          <span class="eyebrow">Live rhythm</span>
           <strong id="timerStatus">Loading...</strong>
           <p id="nextReminderText">Next reminder: --</p>
           <p id="timerQueueText" class="queue-text"></p>
           <div id="statusReminderChips" class="reminder-chip-row" aria-live="polite"></div>
-          <p id="todayStatsText">Today: --</p>
+          <p id="todayStatsText" class="sidebar-stats">Today: --</p>
         </div>
         <div class="status-orb" id="statusOrb">
           <span class="status-type-icon" id="statusTypeIcon" aria-hidden="true"></span>
           <div class="status-time" id="timerTime">--:--</div>
         </div>
       </section>
-
     </aside>
 
     <form id="settingsForm" class="settings-card workspace">
-      <div class="card-heading">
-        <div>
-          <span class="eyebrow">Control center</span>
-          <h2>Reminder setup</h2>
-        </div>
-        <div id="enabledReminderSummary" class="enabled-reminder-summary" aria-live="polite"></div>
-      </div>
+      <div id="enabledReminderSummary" class="enabled-reminder-summary" aria-live="polite"></div>
 
-      <div class="primary-actions">
-        <button type="button" id="timerToggleBtn" class="secondary">
+      <nav class="panel-tabs" aria-label="Pawkeeper sections" role="tablist">
+        <button type="button" class="tab-button is-active" id="todayTab" data-panel-target="todayPanel" role="tab" aria-selected="true" aria-controls="todayPanel">
           <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path class="timer-icon-play" d="M8 5v14l11-7Z"></path>
-            <path class="timer-icon-pause" d="M8 5h3v14H8Zm5 0h3v14h-3Z"></path>
+            <path d="M5 12a7 7 0 1 1 14 0 7 7 0 0 1-14 0Z"></path>
+            <path d="M12 8v4l2.5 1.5"></path>
           </svg>
-          <span id="timerToggleLabel">Start Reminders</span>
+          <span>Overview</span>
         </button>
-        <button type="button" id="breakNowBtn">
+        <button type="button" class="tab-button" id="rhythmTab" data-panel-target="timersPanel" role="tab" aria-selected="false" aria-controls="timersPanel" tabindex="-1">
           <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M5 8 3.5 4.5 8 6l2-2h4l2 2 4.5-1.5L19 8v5a7 7 0 0 1-14 0V8Z"></path>
-            <path d="M9 13h.01M15 13h.01M10 16c1.2.7 2.8.7 4 0"></path>
+            <path d="M4 17c2-6 4-6 6 0s4 6 6 0 4-6 6 0"></path>
+            <path d="M5 7h14"></path>
           </svg>
-          <span>Summon Cat</span>
-        </button>
-      </div>
-
-      <nav class="panel-tabs" aria-label="Reminder settings" role="tablist">
-        <button type="button" class="tab-button is-active" id="timersTab" data-panel-target="timersPanel" role="tab" aria-selected="true" aria-controls="timersPanel">
-          <svg aria-hidden="true" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="8"></circle>
-            <path d="M12 7v5l3 2"></path>
-          </svg>
-          <span>Timers</span>
-        </button>
-        <button type="button" class="tab-button" id="tasksTab" data-panel-target="tasksPanel" role="tab" aria-selected="false" aria-controls="tasksPanel" tabindex="-1">
-          <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M8 12l2.4 2.4L16 8.8"></path>
-            <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path>
-          </svg>
-          <span>Tasks</span>
+          <span>Reminders</span>
         </button>
         <button type="button" class="tab-button" id="catTab" data-panel-target="catPanel" role="tab" aria-selected="false" aria-controls="catPanel" tabindex="-1">
           <svg aria-hidden="true" viewBox="0 0 24 24">
             <path d="M5 8 3.5 4.5 8 6l2-2h4l2 2 4.5-1.5L19 8v5a7 7 0 0 1-14 0V8Z"></path>
             <path d="M9 13h.01M15 13h.01M10 16c1.2.7 2.8.7 4 0"></path>
           </svg>
-          <span>Cat</span>
-        </button>
-        <button type="button" class="tab-button" id="settingsTab" data-panel-target="settingsPanel" role="tab" aria-selected="false" aria-controls="settingsPanel" tabindex="-1">
-          <svg aria-hidden="true" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="3.5"></circle>
-            <path d="M12 3v3m0 12v3M3 12h3m12 0h3m-3.4-6.4-2.1 2.1M8.5 15.5l-2.1 2.1m0-12 2.1 2.1m7 7 2.1 2.1"></path>
-          </svg>
-          <span>Settings</span>
+          <span>Neko</span>
         </button>
       </nav>
 
-      <section class="panel is-active" id="timersPanel" role="tabpanel" aria-labelledby="timersTab">
-        <div class="sub-card-title">
-          <h3>Timers</h3>
-          <span>Stand, drink, focus</span>
+      <section class="panel is-active" id="todayPanel" role="tabpanel" aria-labelledby="todayTab">
+        <div class="today-hero-card">
+          <div>
+            <span class="eyebrow" id="todayHeroEyebrow">Overview</span>
+            <h3 id="todayHeroTitle">Today at a glance</h3>
+            <p id="todayHeroCopy">See the next reminder, what you have completed, and call the cat when you need a short break.</p>
+          </div>
         </div>
 
-        <div class="timer-card" data-timer-card="sedentary">
+        <div class="primary-actions">
+          <button type="button" id="timerToggleBtn" class="secondary">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path class="timer-icon-play" d="M8 5v14l11-7Z"></path>
+              <path class="timer-icon-pause" d="M8 5h3v14H8Zm5 0h3v14h-3Z"></path>
+            </svg>
+            <span id="timerToggleLabel">Start Reminders</span>
+          </button>
+          <button type="button" id="breakNowBtn">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M5 8 3.5 4.5 8 6l2-2h4l2 2 4.5-1.5L19 8v5a7 7 0 0 1-14 0V8Z"></path>
+              <path d="M9 13h.01M15 13h.01M10 16c1.2.7 2.8.7 4 0"></path>
+            </svg>
+            <span>Summon Cat</span>
+          </button>
+        </div>
+
+        <div class="today-metrics" id="todayStatsGrid" aria-live="polite">
+          <div class="metric-card" data-stat-type="sedentary">
+            <span data-i18n="metricStand">Stand</span>
+            <strong>0</strong>
+            <small data-i18n="metricStandHint">stand breaks</small>
+          </div>
+          <div class="metric-card" data-stat-type="hydration">
+            <span data-i18n="metricWater">Water</span>
+            <strong>0</strong>
+            <small data-i18n="metricWaterHint">water breaks</small>
+          </div>
+          <div class="metric-card" data-stat-type="pomodoro">
+            <span data-i18n="metricFocus">Focus</span>
+            <strong>0</strong>
+            <small data-i18n="metricFocusHint">focus rounds</small>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <strong id="todayInsightTitle">Start small.</strong>
+          <p id="todayInsightText">One sip of water or one stretch is enough to begin today's rhythm.</p>
+          <p id="todayWeeklyText" class="week-summary"></p>
+        </div>
+
+        <div class="shortcut-grid">
+          <button type="button" class="secondary" data-open-panel="timersPanel">Adjust reminders</button>
+          <button type="button" class="secondary" data-open-panel="catPanel">Set up cat</button>
+        </div>
+      </section>
+
+      <section class="panel" id="timersPanel" role="tabpanel" aria-labelledby="rhythmTab" hidden>
+        <div class="sub-card-title">
+          <h3>Reminders</h3>
+          <span>When Pawkeeper reminds you and how it appears</span>
+        </div>
+
+        <div class="section-block">
+          <div class="section-heading">
+            <span class="eyebrow" id="reminderWhenEyebrow">When</span>
+            <h4 id="reminderWhenTitle">Break reminders</h4>
+          </div>
+
+          <div class="timer-card" data-timer-card="sedentary">
           <label class="check-row">
             <input type="checkbox" id="sedentaryEnabled">
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 20h8"></path><path d="M12 4v16"></path><path d="m7 9 5-5 5 5"></path></svg>
@@ -144,9 +184,9 @@
               </div>
             </details>
           </div>
-        </div>
+          </div>
 
-        <div class="timer-card" data-timer-card="hydration">
+          <div class="timer-card" data-timer-card="hydration">
           <label class="check-row">
             <input type="checkbox" id="hydrationEnabled">
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11Z"></path><path d="M9 15.5c.8 1.2 1.8 1.8 3 1.8"></path></svg>
@@ -175,9 +215,9 @@
               </div>
             </details>
           </div>
-        </div>
+          </div>
 
-        <div class="timer-card" data-timer-card="pomodoro">
+          <div class="timer-card" data-timer-card="pomodoro">
           <label class="check-row">
             <input type="checkbox" id="pomodoroEnabled">
             <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 7c4 0 7 2.7 7 6.4 0 4.2-3.2 7.1-7 7.1s-7-2.9-7-7.1C5 9.7 8 7 12 7Z"></path><path d="M12 7c-.2-2 1-3.4 3-4"></path><path d="M9 6c1.4-.7 3.5-.7 5 0"></path></svg>
@@ -228,14 +268,57 @@
               </div>
             </details>
           </div>
+          </div>
         </div>
-      </section>
 
-      <section class="panel" id="tasksPanel" role="tabpanel" aria-labelledby="tasksTab" hidden>
-        <div class="sub-card-title">
-          <h3>Tasks</h3>
-          <span>Lightweight due reminders</span>
+        <div class="section-block">
+          <div class="section-heading">
+            <span class="eyebrow" id="reminderHowEyebrow">How</span>
+            <h4 id="reminderHowTitle">Reminder style</h4>
+          </div>
+          <div class="field sr-only-field">
+            <label for="reminderIntensity">Reminder intensity</label>
+            <select id="reminderIntensity">
+              <option value="notification" data-i18n-option="intensityNotification">Light: system notification</option>
+              <option value="overlay" data-i18n-option="intensityOverlay">Medium: transparent cat overlay</option>
+              <option value="fullscreen" data-i18n-option="intensityFullscreen">Strong: fullscreen cat break</option>
+            </select>
+          </div>
+          <div class="intensity-grid" role="radiogroup" aria-label="Reminder intensity">
+            <div class="intensity-card" data-reminder-intensity="notification" role="radio" tabindex="0" aria-checked="false">
+              <strong data-i18n="intensityLightTitle">Light</strong>
+              <span data-i18n="intensityLightCopy">System notification</span>
+              <button type="button" class="secondary try-intensity-btn" data-preview-intensity="notification" data-i18n="tryOnce">Try once</button>
+            </div>
+            <div class="intensity-card" data-reminder-intensity="overlay" role="radio" tabindex="0" aria-checked="true">
+              <strong data-i18n="intensityMediumTitle">Medium</strong>
+              <span data-i18n="intensityMediumCopy">Transparent cat overlay</span>
+              <button type="button" class="secondary try-intensity-btn" data-preview-intensity="overlay" data-i18n="tryOnce">Try once</button>
+            </div>
+            <div class="intensity-card" data-reminder-intensity="fullscreen" role="radio" tabindex="0" aria-checked="false">
+              <strong data-i18n="intensityStrongTitle">Strong</strong>
+              <span data-i18n="intensityStrongCopy">Fullscreen cat break</span>
+              <button type="button" class="secondary try-intensity-btn" data-preview-intensity="fullscreen" data-i18n="tryOnce">Try once</button>
+            </div>
+          </div>
+          <div class="field-grid rhythm-options">
+            <div class="field">
+              <label for="breakTime">Cat overlay countdown (minutes)</label>
+              <input type="number" id="breakTime" min="1" max="60" step="1" inputmode="numeric" value="5">
+            </div>
+            <div class="field">
+              <label for="snoozeMinutes">Snooze duration (minutes)</label>
+              <input type="number" id="snoozeMinutes" min="1" max="60" step="1" inputmode="numeric" value="5">
+            </div>
+          </div>
+          <button type="button" id="pause30Btn" class="quiet">Pause 30 Minutes</button>
         </div>
+
+        <div class="section-block">
+          <div class="section-heading">
+            <span class="eyebrow" id="taskReminderEyebrow">Tasks</span>
+            <h4 id="taskReminderTitle">One-time reminders</h4>
+          </div>
         <div class="field">
           <label for="taskTitle">Task</label>
           <div class="suggestion-field">
@@ -257,12 +340,13 @@
         </div>
         <button type="button" id="addTaskBtn" class="secondary">Add Task Reminder</button>
         <div id="taskList" class="task-list"></div>
+        </div>
       </section>
 
       <section class="panel" id="catPanel" role="tabpanel" aria-labelledby="catTab" hidden>
         <div class="sub-card-title">
           <h3>Cat</h3>
-          <span>Use the default cat or your own</span>
+          <span>Your desktop cat and Agent feedback</span>
         </div>
         <div class="cat-preview" id="catPreview" aria-live="polite">
           <div class="cat-preview-stage" id="catPreviewStage">
@@ -305,15 +389,25 @@
           <button type="button" id="testPetInteractionBtn" class="secondary">Test Pet Interaction</button>
         </div>
 
-        <div class="cat-section">
-          <h4 id="codexLibrarySectionTitle">Codex pet library</h4>
+        <div class="cat-section agent-card">
+          <h4 id="agentControlSectionTitle">Agent control</h4>
+          <p class="field-hint" id="agentControlHint">Let Cursor and local agents express progress through this desktop cat.</p>
+          <label class="check-row">
+            <input type="checkbox" id="petMcpEnabled">
+            <span>Enable MCP control</span>
+          </label>
+          <button type="button" id="copyMcpConfigBtn" class="secondary">Copy Cursor Config</button>
+        </div>
+
+        <details class="cat-section advanced-fields">
+          <summary id="petLibrarySummary">Pet library</summary>
           <button type="button" id="importCodexPetBtn" class="secondary">Import Codex Pet</button>
           <p class="field-hint" id="codexPetStatus">No Codex pets imported yet.</p>
           <div class="codex-pet-list" id="codexPetList"></div>
-        </div>
+        </details>
 
-        <div class="cat-section">
-          <h4 id="overlayCatSectionTitle">Break overlay cat</h4>
+        <details class="cat-section advanced-fields">
+          <summary id="overlayCatSummary">Break overlay cat details</summary>
           <div class="field-grid">
             <button type="button" id="chooseCatBtn" class="secondary">Choose My Cat</button>
             <button type="button" id="clearCatBtn" class="secondary">Use Default</button>
@@ -342,36 +436,28 @@
             <label for="catOffsetY">Vertical offset</label>
             <input type="number" id="catOffsetY" min="-40" max="40" value="0">
           </div>
-        </div>
+        </details>
 
-        <div class="cat-section">
-          <h4 id="agentControlSectionTitle">Agent control</h4>
-          <label class="check-row">
-            <input type="checkbox" id="petMcpEnabled">
-            <span>Enable MCP control</span>
-          </label>
+        <details class="cat-section advanced-fields">
+          <summary id="connectionDetailsSummary">Connection details</summary>
           <label class="check-row">
             <input type="checkbox" id="petMcpLanEnabled">
             <span>Allow LAN access via mDNS</span>
           </label>
           <div class="field">
             <label for="petMcpLocalDomain">Local domain</label>
-            <input type="text" id="petMcpLocalDomain" placeholder="neko.local">
+            <input type="text" id="petMcpLocalDomain" placeholder="pawkeeper.local">
           </div>
           <div class="mcp-status" id="petMcpStatus">MCP server not started.</div>
           <div class="field-grid">
-            <button type="button" id="copyMcpConfigBtn" class="secondary">Copy Cursor Config</button>
             <button type="button" id="copyMcpTokenBtn" class="secondary">Copy Token</button>
+            <button type="button" id="rotateMcpTokenBtn" class="secondary">Generate Token</button>
           </div>
-          <button type="button" id="rotateMcpTokenBtn" class="secondary">Regenerate Token</button>
-        </div>
+        </details>
       </section>
 
-      <section class="panel" id="settingsPanel" role="tabpanel" aria-labelledby="settingsTab" hidden>
-        <div class="sub-card-title">
-          <h3>Settings</h3>
-          <span>Interruptions and quiet time</span>
-        </div>
+      <details class="app-preferences">
+        <summary id="appPreferencesSummary">App preferences</summary>
         <div class="field">
           <label for="languageSelect">Language</label>
           <select id="languageSelect">
@@ -379,24 +465,7 @@
             <option value="zh">中文</option>
           </select>
         </div>
-        <div class="field">
-          <label for="reminderIntensity">Reminder intensity</label>
-          <select id="reminderIntensity">
-            <option value="notification" data-i18n-option="intensityNotification">Light: system notification</option>
-            <option value="overlay" data-i18n-option="intensityOverlay">Medium: transparent cat overlay</option>
-            <option value="fullscreen" data-i18n-option="intensityFullscreen">Strong: fullscreen cat break</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="breakTime">Cat overlay countdown (minutes)</label>
-          <input type="number" id="breakTime" min="1" max="60" step="1" inputmode="numeric" value="5">
-        </div>
-        <div class="field">
-          <label for="snoozeMinutes">Snooze duration (minutes)</label>
-          <input type="number" id="snoozeMinutes" min="1" max="60" step="1" inputmode="numeric" value="5">
-        </div>
-        <button type="button" id="pause30Btn" class="quiet">Pause 30 Minutes</button>
-      </section>
+      </details>
 
       <div class="actions">
         <button type="submit" id="saveBtn">

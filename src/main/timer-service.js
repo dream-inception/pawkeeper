@@ -76,7 +76,7 @@ class TimerService {
     this.emitTick();
   }
 
-  triggerManualReminder() {
+  triggerManualReminder({ presentationOverride = null } = {}) {
     const reminder = {
       id: `manual:${Date.now()}`,
       type: 'manual',
@@ -85,6 +85,7 @@ class TimerService {
       actionLabel: 'Done',
       dueAt: Date.now(),
       priority: REMINDER_PRIORITY.manual,
+      presentationOverride,
     };
 
     // Manual summon is a direct user action; never let stale queued reminders block it.
