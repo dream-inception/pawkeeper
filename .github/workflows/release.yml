@@ -34,7 +34,7 @@ jobs:
         run: npm test
 
       - name: Build macOS app (arm64, ad-hoc signed)
-        run: npm run build:mac
+        run: npm run build:mac -- --publish never
         env:
           # No Apple Developer certificate is configured. electron-builder
           # falls back to ad-hoc signing, which lets the app run locally but
